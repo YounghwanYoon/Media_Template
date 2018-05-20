@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.android.media_template.MainActivity">
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginTop="4dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_weight="7">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_media_startup_image"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintVertical_weight="2" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/starting_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.11"/>
+
+            <TextView
+                android:id="@+id/remain_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1.11"
+                android:gravity="right"/>
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="0dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.965"
+        app:layout_constraintVertical_weight="3">
+
+        <ImageButton
+            style="@style/PlayButtonStyle"
+            android:id="@+id/check_list_button"
+            android:src="@drawable/ic_play_check_list_image"
+            android:contentDescription="TODO" />
+
+        <ImageButton
+            style="@style/PlayButtonStyle"
+            android:id="@+id/previous_button"
+            android:src="@drawable/ic_play_previous_image"
+            android:contentDescription="TODO" />
+
+        <ImageButton
+            style="@style/PlayButtonStyle"
+            android:id="@+id/play_or_pause_button"
+            android:src="@drawable/ic_play_button_image"
+            android:contentDescription="TODO" />
+
+        <ImageButton
+            style="@style/PlayButtonStyle"
+            android:id="@+id/next_button"
+            android:src="@drawable/ic_play_next_image"/>
+        <ImageButton
+            style="@style/PlayButtonStyle"
+            android:id="@+id/add_list_button"
+            android:src="@drawable/play_add_list_image"
+            android:contentDescription="TODO" />
+
+
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>
