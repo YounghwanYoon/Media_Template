@@ -40,7 +40,6 @@ public class SourceListActivity extends ListActivity {
         rootFile = new File(secStore);
         getDir(rootFile);
 
-
     }
 
     private void getDir(File currentFolder) {
@@ -48,7 +47,8 @@ public class SourceListActivity extends ListActivity {
         itemsInCurrentPath = new ArrayList<String>();
         currentPath = new ArrayList<String>();
 
-        myPath.setText("Location: "+ currentFolder);
+        //Display current directory location
+        myPath.setText("Current Location: "+ currentFolder);
 
         //files now has list of files in the current folder(directory)
         files = currentFolder.listFiles();
@@ -60,20 +60,20 @@ public class SourceListActivity extends ListActivity {
             currentPath.add(currentFolder.getParent());
         }
 
-        //Add all of files in the current Path/Folder to list ////  if(!files[i].isHidden() )|| files[i].canRead()   // if(files[i].isDirectory())
+        //Add all of files in the current Path/Folder to list
         for(int i=0; i < files.length;i++)
         {
-            {
-                {
-                    itemsInCurrentPath.add(files[i].getParent()+"/"+ files[i].getName()+"/");
-                }
+            if(!files[i].isHidden() || files[i].canRead()){
+                itemsInCurrentPath.add(files[i].getParent()+"/"+ files[i].getName()+"/");
             }
         }
 
         //R.layout.row_each_directory R.id.individual_file,itemsInCurrentPath
-        ArrayAdapter<String> fileList = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, itemsInCurrentPath);
+        //ArrayAdapter<String> fileList = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, itemsInCurrentPath);
+        MyListAdapter fileList = new MyListAdapter(this,android.R.layout.simple_list_item_1, itemsInCurrentPath, currentFolder);
         setListAdapter(fileList);
     }
+
 
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -97,26 +97,5 @@ public class SourceListActivity extends ListActivity {
         }
         else
             Toast.makeText(SourceListActivity.this,"It is not a directory", Toast.LENGTH_SHORT);
-
-
-        /*        if (file.isDirectory()) {
-            if (file.canRead()) {
-                getDir(new File (currentPath.get(position)));
-            } else {
-                new AlertDialog.Builder(this)
-                        .setIcon(R.drawable.ic_media_startup_image)
-                        .setTitle("[" + file.getName() + "] folder can't be read!")
-                        .setPositiveButton("OK", null)
-                        .show();
-
-            }
-        }
-        else{
-            new AlertDialog.Builder(this)
-                    .setIcon(R.drawable.ic_media_startup_image)
-                    .setTitle("[" + file.getName() + "]")
-                    .setPositiveButton("OK", null)
-                    .show();
-        }*/
     }
 }

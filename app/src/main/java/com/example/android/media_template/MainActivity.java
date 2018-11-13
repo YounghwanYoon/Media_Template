@@ -42,9 +42,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         state = start_state;
+        //Assign references of  Button View in the layout
         mPlayerOrPause_button = (Button) findViewById(R.id.play_or_pause_button);
         mAdd_List_button = (Button) findViewById(R.id.add_list_button);
 
+        //Instantiate Media Player
         mMediaPlayer = new MediaPlayer();
         mPlayerOrPause_button.setOnClickListener(new OnClickListener() {
             @Override
@@ -90,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
     private void selectMusic(String selected){
         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
         if(selectedFile!=null){
@@ -123,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    //Call reset() whenever Media Player Object will be reused
     private void reset() {
         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
         if (mMediaPlayer != null) {
