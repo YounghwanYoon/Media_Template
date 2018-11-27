@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,27 +16,31 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button mCheck_list_button;
-    Button mPlayerOrPause_button;
-    Button mNext_button;
-    Button mAdd_List_button;
+    private Button mCheck_list_button;
+    private Button mPlayerOrPause_button;
+    private Button mNext_button;
+    private Button mAdd_List_button;
 
-    MediaPlayer mMediaPlayer;
+    private MediaPlayer mMediaPlayer;
+    double mCurrentPosition;
+    private Handler mHandler = new Handler();
 
-    SeekBar positionBar;
-    TextView elapseTime;
-    TextView remainTime;
-    int totalDuration;
-    String selectedFile;
+    private SeekBar mSeekBar;
+    private TextView elapseTime;
+    private TextView remainTime;
+    private int totalDuration;
+    private String selectedFile;
 
-    int state;
-    final static int start_state = 0;
-    final static int pause_state = 1;
-    final static int resume_state = 2;
+    private int state;
+    private final static int start_state = 0;
+    private final static int pause_state = 1;
+    private final static int resume_state = 2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
         mPlayerOrPause_button = (Button) findViewById(R.id.play_or_pause_button);
         mAdd_List_button = (Button) findViewById(R.id.add_list_button);
 
+        mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
+
         //Instantiate Media Player
         mMediaPlayer = new MediaPlayer();
         mPlayerOrPause_button.setOnClickListener(new OnClickListener() {
@@ -54,12 +61,28 @@ public class MainActivity extends AppCompatActivity {
                 switch (state){
                     case start_state:
                         selectMusic(selectedFile);
+
                         Toast.makeText(MainActivity.this, "Playing:" + selectedFile ,Toast.LENGTH_SHORT).show();
 
                         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
                             @Override
                             public void onPrepared(MediaPlayer mediaPlayer) {
+
+                                MainActivity.this.runOnUiThread(new Runnable(){
+
+                                    @Override
+                                    public void run() {
+                                        if (mMediaPlayer != null){
+                                            int mCurrentPosition = mMediaPlayer.getCurrentPosition();
+                                            updateSeekBar();
+                                        }
+                                        mHandler.postDelayed(this,1000);
+                                    }
+                                });
+
                                 mediaPlayer.start();
+
+
                             }
                         });
                         mMediaPlayer.start();
@@ -92,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     private void selectMusic(String selected){
         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
         if(selectedFile!=null){
@@ -115,6 +137,64 @@ public class MainActivity extends AppCompatActivity {
             mMediaPlayer=MediaPlayer.create(MainActivity.this, R.raw.not_there_jeongyup);
     }
 
+    private void updateSeekBar() {
+        // updating seek bar
+        totalDuration = mMediaPlayer.getDuration()/1000;
+        mSeekBar.setMax(totalDuration);
+
+        String mMinutes = String.format("%02d", totalDuration/60);
+        String mSeconds = String.format("%02d", totalDuration %60);
+        String mLengthOfFile = mMinutes + ":" + mSeconds;
+
+        mCurrentPosition = mMediaPlayer.getCurrentPosition()/1000;
+        mSeekBar.setProgress((int)mCurrentPosition);
+
+        //ToDo: fix causing crashing error
+        //String mCurrentPositionInMin= String.format("%02d%02d", (int)mCurrentPosition);
+        //String mCurrentPositionInSec = String.format("%02d", mCurrentPosition %60);
+        //String mLengthOfCP = mCurrentPositionInMin + ":" + mCurrentPositionInSec;
+
+        //TextView of current Position of Music.
+        TextView elapse_Time = (TextView)findViewById(R.id.elapse_time);
+        elapse_Time.setText(String.valueOf(mCurrentPosition));
+
+        if(mMediaPlayer!=null){
+            /*
+            Runnable mUpdateCurrentPositionTextView = new Runnable(){
+
+                @Override
+                public void run() {
+
+                }
+            };
+*/
+
+            //TextView of total length of current file.
+            TextView remain_Time = (TextView)findViewById(R.id.remain_time);
+            remain_Time.setText(String.valueOf(mLengthOfFile));
+        }
+        //To Do : Need to update the changing in both elapse and remain with runnable method(?) or class.
+
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    mMediaPlayer.seekTo(progress*1000);
+
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
 
     //Result from selecting a file from External SD Driver
     @Override

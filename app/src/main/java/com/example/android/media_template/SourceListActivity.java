@@ -24,6 +24,7 @@ public class SourceListActivity extends ListActivity {
     private List<String> itemsInCurrentPath = null;
     private List<String> currentPath = null;
     private String root;
+    private String previousSelectedPath;
     private TextView myPath;
     private File rootFile;
     private File[] files;
@@ -32,14 +33,38 @@ public class SourceListActivity extends ListActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.listview);
+        start();
+    }
 
-        myPath = (TextView)findViewById(R.id.path);
-        String secStore = System.getenv("SECONDARY_STORAGE");
+    private void start(){
+        //If there was previously selected path, it will start from the selected path;
+        if(previousSelectedPath!=null){
+            rootFile = new File(previousSelectedPath);
+            getDir(rootFile);
+        }
+        //If this is first time of selecting file.
+        else {
+            myPath = (TextView) findViewById(R.id.path);
 
-        //Environment.getExternalStorageDirectory().getPath()
-        rootFile = new File(secStore);
-        getDir(rootFile);
+            //"/storage/" path will open directory in between Internal and External SD Cards within the device.
+            //failed with s5
+            //String secStore = System.getenv("SECONDARY_STORAGE");
 
+            //not with s5
+            //String secStore = getBaseContext().getFilesDir().getAbsolutePath();
+
+            //"/storage/" works with note2 not with s5
+            //String secStore = "/storage/";
+            String secStore = "/storage/";
+            //String secStore = "/root/";
+            //TODO: Need to do device control. Depends on the device, rootFile could cause error due to having different folder/path names
+
+            Log.i("SourceListActivity.java", "currentPath: " + secStore);
+            //Environment.getExternalStorageDirectory().getPath()
+            rootFile = new File(secStore);
+
+            getDir(rootFile);
+        }
     }
 
     private void getDir(File currentFolder) {
@@ -59,14 +84,19 @@ public class SourceListActivity extends ListActivity {
             currentPath.add(rootFile.getParent());
             currentPath.add(currentFolder.getParent());
         }
+        Log.v("SourceListActivty.java", "Length of files:" +  files.length);
 
-        //Add all of files in the current Path/Folder to list
-        for(int i=0; i < files.length;i++)
-        {
-            if(!files[i].isHidden() || files[i].canRead()){
-                itemsInCurrentPath.add(files[i].getParent()+"/"+ files[i].getName()+"/");
+        if(files.length ==0) {
+            Log.v("SourceListActivty.java", "Length of files is empty");
+        } else {
+            //Add all of files in the current Path/Folder to list
+            for(int i=0; i < files.length;i++) {
+                if(!files[i].isHidden() || files[i].canRead()){
+                    itemsInCurrentPath.add(files[i].getParent()+"/"+ files[i].getName()+"/");
+                }
             }
         }
+
 
         //R.layout.row_each_directory R.id.individual_file,itemsInCurrentPath
         //ArrayAdapter<String> fileList = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, itemsInCurrentPath);
