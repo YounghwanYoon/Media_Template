@@ -29,6 +29,9 @@ public class SourceListActivity extends ListActivity {
     private File rootFile;
     private File[] files;
 
+    //this will store a path of folder that contains music(s) that most recently played.
+    private static String lastSavePath;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,8 +81,7 @@ public class SourceListActivity extends ListActivity {
         //files now has list of files in the current folder(directory)
         files = currentFolder.listFiles();
 
-        if(!currentFolder.equals(rootFile))
-        {
+        if(!currentFolder.equals(rootFile)) {
             itemsInCurrentPath.add(currentFolder.getParent());
             currentPath.add(rootFile.getParent());
             currentPath.add(currentFolder.getParent());
@@ -109,7 +111,9 @@ public class SourceListActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         //One of item in the current folder is selected
         File selected_file = new File(itemsInCurrentPath.get(position));
-
+        //ToDo: Create static last played folder path.
+        lastSavePath = selected_file.toString();
+        Log.v("SourceListActivity.java", "Last saved music fold was:" + lastSavePath);
         if(selected_file.isDirectory())
         {
             if(selected_file.canRead())

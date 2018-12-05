@@ -19,12 +19,14 @@ import android.widget.Toast;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 public class MainActivity extends AppCompatActivity {
 
     private Button mCheck_list_button;
     private Button mPlayerOrPause_button;
     private Button mNext_button;
+    private Button mPrevious_button;
     private Button mAdd_List_button;
 
     private MediaPlayer mMediaPlayer;
@@ -41,15 +43,21 @@ public class MainActivity extends AppCompatActivity {
     private final static int start_state = 0;
     private final static int pause_state = 1;
     private final static int resume_state = 2;
+    private final static int next_file= 3;
+    private final static int back_file=4;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         state = start_state;
+
         //Assign references of  Button View in the layout
         mPlayerOrPause_button = (Button) findViewById(R.id.play_or_pause_button);
         mAdd_List_button = (Button) findViewById(R.id.add_list_button);
+        mNext_button = (Button) findViewById(R.id.next_button);
+        mPrevious_button=(Button) findViewById(R.id.previous_button);
 
         mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
 
@@ -60,8 +68,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 switch (state){
                     case start_state:
-                        selectMusic(selectedFile);
+                        try {
+                            selectMusic(selectedFile);
+                        }catch (InvocationTargetException ex){
 
+                        }
                         Toast.makeText(MainActivity.this, "Playing:" + selectedFile ,Toast.LENGTH_SHORT).show();
 
                         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
@@ -104,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
+
         mAdd_List_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -115,8 +129,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void selectMusic(String selected){
+    private void selectMusic(String selected) throws InvocationTargetException{
+
         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
+
         if(selectedFile!=null){
             //mMediaPlayer.reset();
             Uri myUri = Uri.parse("file://" + selectedFile);
