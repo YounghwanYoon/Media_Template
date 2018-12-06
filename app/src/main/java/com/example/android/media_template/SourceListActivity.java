@@ -39,8 +39,6 @@ public class SourceListActivity extends ListActivity {
         //Environment.getExternalStorageDirectory().getPath()
         rootFile = new File(secStore);
         getDir(rootFile);
-
-
     }
 
     private void getDir(File currentFolder) {
@@ -63,11 +61,7 @@ public class SourceListActivity extends ListActivity {
         //Add all of files in the current Path/Folder to list ////  if(!files[i].isHidden() )|| files[i].canRead()   // if(files[i].isDirectory())
         for(int i=0; i < files.length;i++)
         {
-            {
-                {
-                    itemsInCurrentPath.add(files[i].getParent()+"/"+ files[i].getName()+"/");
-                }
-            }
+            itemsInCurrentPath.add(files[i].getParent()+"/"+ files[i].getName()+"/");
         }
 
         //R.layout.row_each_directory R.id.individual_file,itemsInCurrentPath
