@@ -95,13 +95,14 @@ public class MainActivity extends AppCompatActivity {
                                             mHandler.postDelayed(this, 1000);
                                         }
                                     });
+                                    Toast.makeText(MainActivity.this, "Playing!" ,Toast.LENGTH_SHORT).show();
                                     mediaPlayer.start();
                                 }
                             });
                         }catch(NullPointerException ex){
                             ex.getStackTrace();
                         }
-                        Toast.makeText(MainActivity.this, "Playing!" ,Toast.LENGTH_SHORT).show();
+
                         //mMediaPlayer.start();
                         state++;
                         break;

@@ -10,11 +10,9 @@
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="370dp"
-        android:layout_marginTop="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="4dp"
+        android:layout_margin="0dp"
         android:gravity="center_horizontal"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -23,11 +21,57 @@
         app:layout_constraintVertical_bias="0.0"
         app:layout_constraintVertical_weight="7">
 
-        <VideoView
-            android:id="@+id/videoScreen"
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_media_startup_image" />
+            android:layout_margin="0dp">
+
+            <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Playing:" />
+
+                <ImageButton
+                    android:id="@+id/rotation_button"
+                    style="@style/PlayButtonStyle"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_margin="0dp"
+                    android:background="@mipmap/ic_device_rotation" />
+
+
+            </LinearLayout>
+
+            <VideoView
+                android:id="@+id/videoScreen"
+                android:layout_width="match_parent"
+                android:layout_height="311dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:src="@drawable/ic_media_startup_image"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+        </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>
 
