@@ -1,21 +1,17 @@
 package com.example.android.media_template;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +20,7 @@ public class SourceListActivity extends ListActivity {
     private List<String> itemsInCurrentPath = null;
     private List<String> currentPath = null;
     private String root;
-    private String previousSelectedPath;
+    private static String mPreviousSelectedPath;
     private TextView myPath;
     private File rootFile;
     private File[] files;
@@ -40,14 +36,17 @@ public class SourceListActivity extends ListActivity {
     }
 
     private void start(){
+        myPath = (TextView) findViewById(R.id.path);
+
         //If there was previously selected path, it will start from the selected path;
-        if(previousSelectedPath!=null){
-            rootFile = new File(previousSelectedPath);
+        if(mPreviousSelectedPath !=null){
+            rootFile = new File(mPreviousSelectedPath);
+            Log.v("SourceActivity.java", "previously selected file path is: " + mPreviousSelectedPath);
+
             getDir(rootFile);
         }
         //If this is first time of selecting file.
         else {
-            myPath = (TextView) findViewById(R.id.path);
 
             //"/storage/" path will open directory in between Internal and External SD Cards within the device.
             //failed with s5
@@ -76,17 +75,22 @@ public class SourceListActivity extends ListActivity {
         currentPath = new ArrayList<String>();
 
         //Display current directory location
-        myPath.setText("Current Location: "+ currentFolder);
+        myPath.setText("Current Location: "+ currentFolder.getPath());
 
         //files now has list of files in the current folder(directory)
         files = currentFolder.listFiles();
 
         if(!currentFolder.equals(rootFile)) {
-            itemsInCurrentPath.add(currentFolder.getParent());
-            currentPath.add(rootFile.getParent());
-            currentPath.add(currentFolder.getParent());
+            if(currentFolder.getPath() != "/storage/") {
+                //A folder that will redirect to previous path;
+                itemsInCurrentPath.add(currentFolder.getParent());
+                Log.v("SourceListActivity", " CurrentFolder is at: " + currentFolder.getPath());
+
+                currentPath.add(rootFile.getParent());
+                currentPath.add(currentFolder.getParent());
+            }
         }
-        Log.v("SourceListActivty.java", "Length of files:" +  files.length);
+        //Log.v("SourceListActivty.java", "Length of files:" +  files.length);
 
         if(files.length ==0) {
             Log.v("SourceListActivty.java", "Length of files is empty");
@@ -99,31 +103,35 @@ public class SourceListActivity extends ListActivity {
             }
         }
 
-
         //R.layout.row_each_directory R.id.individual_file,itemsInCurrentPath
         //ArrayAdapter<String> fileList = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, itemsInCurrentPath);
         MyListAdapter fileList = new MyListAdapter(this,android.R.layout.simple_list_item_1, itemsInCurrentPath, currentFolder);
         setListAdapter(fileList);
     }
 
-
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         //One of item in the current folder is selected
         File selected_file = new File(itemsInCurrentPath.get(position));
-        //ToDo: Create static last played folder path.
-        lastSavePath = selected_file.toString();
-        Log.v("SourceListActivity.java", "Last saved music fold was:" + lastSavePath);
+
         if(selected_file.isDirectory())
         {
-            if(selected_file.canRead())
+            if(selected_file.canRead()){
+                //Calling previouslySelectedPath() to store most recently visited folder
+                //previouslySelectedPath(selected_file);
+                //Log.v("SourceListActivity.java", "Last saved music fold was:" + mPreviousSelectedPath);
                 getDir(selected_file);
+            }
             else //Double caution for selecting non-readable file (which was sorted in getDir();
                 Toast.makeText(SourceListActivity.this,"It cannot be read", Toast.LENGTH_SHORT);
 
         }
         //Once selected file is mp3 file, then it return to parent activity.
-        else if(selected_file.getPath().endsWith(".mp3") ){
+        else if(selected_file.getPath().endsWith(".mp3") || selected_file.getPath().endsWith(".mp4")){
+            //Calling previouslySelectedPath() to store most recently visited file
+            //previouslySelectedPath(selected_file);
+            //Log.v("SourceListActivity.java", "Last saved music fold was:" + mPreviousSelectedPath);
+
             Intent returnIntent = getIntent();//new Intent();
             returnIntent.putExtra("result",selected_file.getPath() );
             setResult(Activity.RESULT_OK, returnIntent);
@@ -132,4 +140,13 @@ public class SourceListActivity extends ListActivity {
         else
             Toast.makeText(SourceListActivity.this,"It is not a directory", Toast.LENGTH_SHORT);
     }
+
+    //This method save most recent path that user looked.
+    private void previouslySelectedPath(File previousPath){
+        if(previousPath.getPath().endsWith(".mp3"))
+            mPreviousSelectedPath = previousPath.getParent();
+        else
+            mPreviousSelectedPath = previousPath.toString();
+    }
+
 }

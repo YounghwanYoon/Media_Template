@@ -31,14 +31,15 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mAdd_List_button;
 
     private MediaPlayer mMediaPlayer;
-    double mCurrentPosition;
+    int mCurrentPosition;
     private Handler mHandler = new Handler();
 
     private VideoView mVideoScreen;
     private SeekBar mSeekBar;
     private TextView elapseTime;
     private TextView remainTime;
-    private int totalDuration;
+    private long totalDuration;
+    private String mLengthOfFile;
     private String selectedFile;
 
     private int state;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         state = start_state;
 
         mVideoScreen = (VideoView) findViewById(R.id.videoScreen);
+        mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
 
         //Assign references of  ImageButton View in the layout
         mPlayerOrPause_button = (ImageButton) findViewById(R.id.play_or_pause_button);
@@ -63,53 +65,60 @@ public class MainActivity extends AppCompatActivity {
         mNext_button = (ImageButton) findViewById(R.id.next_button);
         mPrevious_button=(ImageButton) findViewById(R.id.previous_button);
 
-        mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
-
         //Instantiate Media Player
         mMediaPlayer = new MediaPlayer();
+        mediaController();
+    }
+
+    private void mediaController(){
         mPlayerOrPause_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 switch (state){
                     case start_state:
                         try {
-                            selectMusic(selectedFile);
+                            differentTypeOfFileHandler(selectedFile);
                         }catch (InvocationTargetException ex){
-                            Log.v("MainActivity.java", "Error is from here!");
-                            ex.getMessage();
+                            ex.getStackTrace();
                         }
-                        Toast.makeText(MainActivity.this, "Playing:" + selectedFile ,Toast.LENGTH_SHORT).show();
-
-                        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
-                            @Override
-                            public void onPrepared(MediaPlayer mediaPlayer) {
-                                MainActivity.this.runOnUiThread(new Runnable(){
-
-                                    @Override
-                                    public void run() {
-                                        if (mMediaPlayer != null){
-                                            int mCurrentPosition = mMediaPlayer.getCurrentPosition();
-                                            updateSeekBar();
+                        try {
+                            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                @Override
+                                public void onPrepared(MediaPlayer mediaPlayer) {
+                                    MainActivity.this.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (mMediaPlayer != null) {
+                                                mCurrentPosition = mMediaPlayer.getCurrentPosition();
+                                                updateSeekBar();
+                                            }
+                                            mHandler.postDelayed(this, 1000);
                                         }
-                                        mHandler.postDelayed(this,500);
-                                    }
-                                });
-                                mediaPlayer.start();
-                            }
-                        });
-                        mMediaPlayer.start();
+                                    });
+                                    mediaPlayer.start();
+                                }
+                            });
+                        }catch(NullPointerException ex){
+                            ex.getStackTrace();
+                        }
+                        Toast.makeText(MainActivity.this, "Playing!" ,Toast.LENGTH_SHORT).show();
+                        //mMediaPlayer.start();
                         state++;
                         break;
                     case pause_state:
                         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
                         Toast.makeText(MainActivity.this, "Pause!" ,Toast.LENGTH_SHORT).show();
-                        mMediaPlayer.pause();
+                        if(mMediaPlayer!=null) {
+                            mMediaPlayer.pause();
+                        }
                         state ++;
                         break;
                     case resume_state:
                         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
                         Toast.makeText(MainActivity.this, "Resume!" ,Toast.LENGTH_SHORT).show();
-                        mMediaPlayer.start();
+                        if(mMediaPlayer != null){
+                            mMediaPlayer.start();
+                        }
                         state--;
                         break;
                 }
@@ -119,14 +128,20 @@ public class MainActivity extends AppCompatActivity {
         mAdd_List_button.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                reset();
-                Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
-                startActivityForResult(returnSelectedFile_Intent,0);
+                updateCurrentSource();
             }
         });
     }
 
-    private void selectMusic(String selected) throws InvocationTargetException{
+    //This method updates current source file.
+    private void updateCurrentSource(){
+        reset();
+        Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
+        startActivityForResult(returnSelectedFile_Intent,0);
+    }
+
+    //This method will handle a file differently depends on the type of a media file.
+    private void differentTypeOfFileHandler(String selected) throws InvocationTargetException{
 
         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
 
@@ -151,50 +166,28 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Log.i("MainActivity.java", "inside selectMusic is called!");
             mMediaPlayer.prepareAsync();
         }
         else
-            mMediaPlayer=MediaPlayer.create(MainActivity.this, R.raw.not_there_jeongyup);
+            updateCurrentSource();
     }
 
+    //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
         // updating seek bar
-        totalDuration = mMediaPlayer.getDuration()/1000;
-        mSeekBar.setMax(totalDuration);
+        totalDuration = mMediaPlayer.getDuration();
+        mSeekBar.setMax((int)totalDuration/1000);
 
-        String mMinutes = String.format("%02d", totalDuration/60);
-        String mSeconds = String.format("%02d", totalDuration %60);
-        String mLengthOfFile = mMinutes + ":" + mSeconds;
-
-        mCurrentPosition = mMediaPlayer.getCurrentPosition()/1000;
-        mSeekBar.setProgress((int)mCurrentPosition);
-
-        //ToDo: fix causing crashing error
-        //String mCurrentPositionInMin= String.format("%02d%02d", (int)mCurrentPosition);
-        //String mCurrentPositionInSec = String.format("%02d", mCurrentPosition %60);
-        //String mLengthOfCP = mCurrentPositionInMin + ":" + mCurrentPositionInSec;
+        mCurrentPosition = mMediaPlayer.getCurrentPosition();
+        mSeekBar.setProgress(mCurrentPosition/1000);
 
         //TextView of current Position of Music.
-        TextView elapse_Time = (TextView)findViewById(R.id.elapse_time);
-        elapse_Time.setText(String.valueOf(mCurrentPosition));
+        TextView currentPosition = (TextView)findViewById(R.id.current_position);
+        currentPosition.setText(getTimeString(mCurrentPosition));
 
-        if(mMediaPlayer!=null){
-            /*
-            Runnable mUpdateCurrentPositionTextView = new Runnable(){
-
-                @Override
-                public void run() {
-
-                }
-            };
-*/
-
-            //TextView of total length of current file.
-            TextView remain_Time = (TextView)findViewById(R.id.remain_time);
-            remain_Time.setText(String.valueOf(mLengthOfFile));
-        }
-        //To Do : Need to update the changing in both elapse and remain with runnable method(?) or class.
+        //TextView of maximum/total duration of music.
+        TextView remain_Time = (TextView)findViewById(R.id.remain_time);
+        remain_Time.setText(getMiliSecToTime((int)totalDuration));
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -215,6 +208,65 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private StringBuffer getMiliSecToTime(int millis){
+        StringBuffer buffer = new StringBuffer();
+
+        int mSeconds = millis/1000;
+
+        int mHours = mSeconds/(60*60);
+        int remainingTime = mSeconds % (60*60);
+        int mMinutes = remainingTime /60;
+        mSeconds = remainingTime % 60;
+
+        if(mHours == 0)
+            return buffer
+                    .append(String.format("%02d",mMinutes))
+                    .append(":")
+                    .append(String.format("%02d",mSeconds));
+
+        else
+           return buffer
+                    .append(String.format("%02d",mHours))
+                    .append(":")
+                    .append(String.format("%02d",mMinutes))
+                    .append(":")
+                    .append(String.format("%02d",mSeconds));
+    };
+
+    private StringBuffer getTimeString(int millis) {
+        StringBuffer buffer = new StringBuffer();
+
+        int mSeconds = millis/1000;
+
+        int mHours = mSeconds/(60*60);
+        int remainingTime = mSeconds % (60*60);
+        int mMinutes = remainingTime /60;
+        mSeconds = remainingTime % 60;
+
+        if(mHours == 0)
+            return buffer
+                    .append(String.format("%02d",mMinutes))
+                    .append(":")
+                    .append(String.format("%02d",mSeconds));
+
+        else
+            return buffer
+                    .append(String.format("%02d",mHours))
+                    .append(":")
+                    .append(String.format("%02d",mMinutes))
+                    .append(":")
+                    .append(String.format("%02d",mSeconds));
+
+                /*
+        if(mCurrentPosition>3600)
+            currentPosition.setText(String.format("%02d%02d%02d", mCurrentPosition));
+        else if (mCurrentPosition >60)
+            currentPosition.setText(String.format("%02d%02d", mCurrentPosition));
+        else
+            currentPosition.setText(String.format("%02d", mCurrentPosition));
+*/
     }
 
     //Result from selecting a file from External SD Driver
@@ -252,7 +304,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         stop();
     }
-
     /*
     When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
      */
