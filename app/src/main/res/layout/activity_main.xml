@@ -34,28 +34,18 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
+                    android:maxWidth="100dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="8dp"
-                    android:text="Playing:" />
-
-                <ImageButton
-                    android:id="@+id/rotation_button"
-                    style="@style/PlayButtonStyle"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
                     android:layout_margin="0dp"
-                    android:background="@mipmap/ic_device_rotation" />
-
-
+                    android:id="@+id/file_playing"
+                    android:text="Playing:" />
             </LinearLayout>
 
             <VideoView

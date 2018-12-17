@@ -10,9 +10,7 @@
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginBottom="4dp"
-        android:layout_marginEnd="4dp"
-        android:layout_marginTop="4dp"
+        android:layout_margin="0dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
@@ -23,11 +21,11 @@
         app:layout_constraintVertical_bias="0.0"
         app:layout_constraintVertical_weight="7">
 
-        <ImageView
+        <VideoView
+            android:id="@+id/videoScreen"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_media_startup_image"/>
-
+            android:src="@drawable/ic_media_startup_image" />
     </LinearLayout>
 
 
@@ -45,6 +43,7 @@
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
 
         <SeekBar
+            android:id="@+id/position_seek_bar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_constraintVertical_weight="2" />
@@ -56,13 +55,13 @@
                 android:id="@+id/current_position"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1.11"/>
+                android:text="0:00"/>
 
             <TextView
                 android:id="@+id/remain_time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="1.11"
+                android:text="0:00"
                 android:gravity="right"/>
         </LinearLayout>
 
@@ -103,7 +102,7 @@
         <ImageButton
             style="@style/PlayButtonStyle"
             android:id="@+id/play_or_pause_button"
-            android:src="@drawable/ic_play_button_image"
+            android:background="@drawable/ic_play_button_image"
             android:contentDescription="TODO" />
 
         <ImageButton
