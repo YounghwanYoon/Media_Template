@@ -1,18 +1,20 @@
 package com.example.android.media_template;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -31,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mAdd_List_button;
     private ImageButton mRotate_Button;
 
-    private MediaPlayer mMediaPlayer;
+    private static MediaPlayer mMediaPlayer;
     private Handler mHandler = new Handler();
 
     private VideoView mVideoScreen;
@@ -42,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     private int mCurrentPosition;
     private String mLengthOfFile;
     private String mSelectedFile;
+
+    private static SurfaceView videoView;
+    private static SurfaceHolder holder;
 
     private int state;
     private final static int start_state = 0;
@@ -55,6 +60,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Remove Title Bar
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //Remove Notification Bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        //Set content view to avoid crash
         setContentView(R.layout.activity_main);
 
         state = start_state;
@@ -68,24 +80,32 @@ public class MainActivity extends AppCompatActivity {
         mNext_button = (ImageButton) findViewById(R.id.next_button);
         mPrevious_button=(ImageButton) findViewById(R.id.previous_button);
 
-        //Instantiate Media Player
-        mMediaPlayer = new MediaPlayer();
-        if(savedInstanceState!=null){
-            mMediaPlaying = true;
-
-        }else
-            mMediaPlaying = false;
+        videoView = (SurfaceView)findViewById(R.id.videoScreen);
+        holder = videoView.getHolder();
 
         mediaController();
     }
 
     private void mediaController(){
-        mPlayerOrPause_button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                switch (state){
-                    case start_state:
-                        //if (!mMediaPlaying) {                        }
+
+        if(mMediaPlaying ){
+            try {
+                differentTypeOfFileHandler(mSelectedFile);
+            } catch (InvocationTargetException ex) {
+                ex.getStackTrace();
+            }
+            mMediaPlayer.seekTo(mCurrentPosition);
+            mMediaPlayer.start();
+
+            state++;
+        }
+        else {
+            mPlayerOrPause_button.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    switch (state) {
+                        case start_state:
+                            //if (!mMediaPlaying) {                        }
                             try {
                                 differentTypeOfFileHandler(mSelectedFile);
                             } catch (InvocationTargetException ex) {
@@ -113,39 +133,41 @@ public class MainActivity extends AppCompatActivity {
                                 });
                             } catch (NullPointerException ex) {
                                 ex.getStackTrace();
+                                mMediaPlaying = false;
                             }
 
-                        //mMediaPlayer.start();
-                        state++;
-                        break;
-                    case pause_state:
-                        mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
-                        Toast.makeText(MainActivity.this, "Pause!" ,Toast.LENGTH_SHORT).show();
-                        if(mMediaPlayer!=null) {
-                            mMediaPlayer.pause();
-                        }
-                        mMediaPlaying = false;
-                        state ++;
-                        break;
-                    case resume_state:
-                        mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
-                        Toast.makeText(MainActivity.this, "Resume!" ,Toast.LENGTH_SHORT).show();
-                        if(mMediaPlayer != null){
-                            mMediaPlayer.start();
-                        }
-                        mMediaPlaying = true;
-                        state--;
-                        break;
+                            //mMediaPlayer.start();
+                            state++;
+                            break;
+                        case pause_state:
+                            mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
+                            Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
+                            if (mMediaPlayer != null) {
+                                mMediaPlayer.pause();
+                            }
+                            mMediaPlaying = false;
+                            state++;
+                            break;
+                        case resume_state:
+                            mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
+                            Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
+                            if (mMediaPlayer != null) {
+                                mMediaPlayer.start();
+                                mMediaPlaying = true;
+                            }
+                            state--;
+                            break;
+                    }
                 }
-            }
-        });
+            });
 
-        mAdd_List_button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                updateCurrentSource();
-            }
-        });
+            mAdd_List_button.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    updateCurrentSource();
+                }
+            });
+        }
     }
 
     //This method updates current source file.
@@ -171,8 +193,6 @@ public class MainActivity extends AppCompatActivity {
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             }
             else{
-                SurfaceView videoView = (SurfaceView)findViewById(R.id.videoScreen);
-                SurfaceHolder holder = videoView.getHolder();
                 mMediaPlayer.setDisplay(holder);
             }
 
@@ -309,15 +329,6 @@ public class MainActivity extends AppCompatActivity {
                     .append(String.format("%02d",mMinutes))
                     .append(":")
                     .append(String.format("%02d",mSeconds));
-
-                /*
-        if(mCurrentPosition>3600)
-            currentPosition.setText(String.format("%02d%02d%02d", mCurrentPosition));
-        else if (mCurrentPosition >60)
-            currentPosition.setText(String.format("%02d%02d", mCurrentPosition));
-        else
-            currentPosition.setText(String.format("%02d", mCurrentPosition));
-*/
     }
 
     //Result from selecting a file from External SD Driver
@@ -364,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
         stop();
     }
 
-/*
+
     //Saving data to prevent complete restart which occurs during orientation change
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -384,23 +395,56 @@ public class MainActivity extends AppCompatActivity {
         mCurrentPosition = savedInstanceState.getInt("mCurrentPosition");
         mMediaPlaying = savedInstanceState.getBoolean("isMediaPlaying");
         mSelectedFile = savedInstanceState.getString("selectedFile");
-        updateSeekBar();
-        Log.v("MainActivity.java", "mMediaPlaying?1" + mMediaPlaying);
-        if(mMediaPlaying){
+        if(mMediaPlayer != null){
+            mMediaPlayer.release();;
+        }
+        mediaController();
+
+//        updateSeekBar();
+//        Log.v("MainActivity.java", "mMediaPlaying?1" + mMediaPlaying);
+        /*if (mMediaPlaying) {
             state = start_state;
             try {
                 differentTypeOfFileHandler(mSelectedFile);
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
 
-            mMediaPlayer.seekTo(mCurrentPosition);
-            Log.v("MainActivity.java", "mCurrentPosition?2" + mCurrentPosition);
-            mMediaPlayer.start();
+                mMediaPlayer.seekTo(mCurrentPosition);
+                Log.v("MainActivity.java", "mCurrentPosition?2" + mCurrentPosition);
+                mMediaPlayer.start();
+            }
         }
         else
             mediaController();
+*/
+        }
+        /*
+    private class myView extends SurfaceView implements Runnable{
+
+        public myView(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder){
+
+        }
+
+        @Override
+        public void run() {
+
+        }
+
+        public void pause(){
+
+        }
+
+        public void stop(){
+
+        }
 
     }
-
     */
 }
+
+

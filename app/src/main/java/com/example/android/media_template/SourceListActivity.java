@@ -3,10 +3,13 @@ package com.example.android.media_template;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +34,13 @@ public class SourceListActivity extends ListActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Remove Title Bar
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //Remove Notification Bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        //Set content view to avoid crash
         setContentView(R.layout.listview);
         start();
     }
@@ -149,4 +159,8 @@ public class SourceListActivity extends ListActivity {
             mPreviousSelectedPath = previousPath.toString();
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
 }

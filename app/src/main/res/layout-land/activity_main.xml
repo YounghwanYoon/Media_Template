@@ -7,13 +7,12 @@
     tools:context="com.example.android.media_template.MainActivity">
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/linearLayout1"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="match_parent"
         android:layout_margin="0dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,93 +27,103 @@
             android:src="@drawable/ic_media_startup_image" />
     </LinearLayout>
 
-
     <LinearLayout
+        android:id="@+id/controller_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_margin="0dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="invisible">
 
-        <SeekBar
-            android:id="@+id/position_seek_bar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintVertical_weight="2" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/current_position"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0:00"/>
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/remain_time"
+            <SeekBar
+                android:id="@+id/position_seek_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintVertical_weight="2" />
+
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="0:00"
-                android:gravity="right"/>
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/current_position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+
+                    android:text="0:00" />
+
+                <TextView
+                    android:id="@+id/remain_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:text="0:00" />
+            </RelativeLayout>
+
+
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.965"
+            app:layout_constraintVertical_weight="3">
+
+            <ImageButton
+                android:id="@+id/check_list_button"
+                style="@style/PlayButtonStyle"
+                android:contentDescription="TODO"
+                android:src="@drawable/ic_play_check_list_image" />
+
+            <ImageButton
+                android:id="@+id/previous_button"
+                style="@style/PlayButtonStyle"
+                android:contentDescription="TODO"
+                android:src="@drawable/ic_play_previous_image" />
+
+            <ImageButton
+                android:id="@+id/play_or_pause_button"
+                style="@style/PlayButtonStyle"
+                android:background="@drawable/ic_play_button_image"
+                android:contentDescription="TODO" />
+
+            <ImageButton
+                android:id="@+id/next_button"
+                style="@style/PlayButtonStyle"
+                android:src="@drawable/ic_play_next_image" />
+
+            <ImageButton
+                android:id="@+id/add_list_button"
+                style="@style/PlayButtonStyle"
+                android:contentDescription="TODO"
+                android:src="@drawable/play_add_list_image" />
+
+
+        </LinearLayout>
 
     </LinearLayout>
 
-
-    <LinearLayout
-        android:id="@+id/linearLayout3"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="0dp"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.965"
-        app:layout_constraintVertical_weight="3">
-
-        <ImageButton
-            style="@style/PlayButtonStyle"
-            android:id="@+id/check_list_button"
-            android:src="@drawable/ic_play_check_list_image"
-            android:contentDescription="TODO" />
-
-        <ImageButton
-            style="@style/PlayButtonStyle"
-            android:id="@+id/previous_button"
-            android:src="@drawable/ic_play_previous_image"
-            android:contentDescription="TODO" />
-
-        <ImageButton
-            style="@style/PlayButtonStyle"
-            android:id="@+id/play_or_pause_button"
-            android:background="@drawable/ic_play_button_image"
-            android:contentDescription="TODO" />
-
-        <ImageButton
-            style="@style/PlayButtonStyle"
-            android:id="@+id/next_button"
-            android:src="@drawable/ic_play_next_image"/>
-        <ImageButton
-            style="@style/PlayButtonStyle"
-            android:id="@+id/add_list_button"
-            android:src="@drawable/play_add_list_image"
-            android:contentDescription="TODO" />
-
-
-    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
