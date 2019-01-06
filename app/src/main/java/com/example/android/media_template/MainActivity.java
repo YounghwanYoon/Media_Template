@@ -1,14 +1,18 @@
 package com.example.android.media_template;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -16,6 +20,7 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,8 +28,15 @@ import android.widget.VideoView;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
+
+    private LinearLayout seekBar_layout;
+    private LinearLayout mediaController_layout;
+    private LinearLayout videoView_layout;
+
+    private Handler delayHandler;
 
     private ImageButton mCheck_list_button;
     private ImageButton mPlayerOrPause_button;
@@ -70,6 +82,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         state = start_state;
+
+        mediaController_layout = findViewById(R.id.mediaController);
+        seekBar_layout = findViewById(R.id.seekBar_Controller);
+        videoView_layout = findViewById(R.id.screen_Layout);
+
+        delayHandler = new Handler();
 
         mVideoScreen = (VideoView) findViewById(R.id.videoScreen);
         mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
@@ -244,42 +262,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    private void updateSeekBar(int currentPlayTime) {
-
-
-        // updating seek bar
-        totalDuration = mMediaPlayer.getDuration();
-        mSeekBar.setMax((int)totalDuration/1000);
-        mCurrentPosition = currentPlayTime;
-        mSeekBar.setProgress(mCurrentPosition/1000);
-
-        //TextView of current Position of Music.
-        TextView currentPosition = (TextView)findViewById(R.id.current_position);
-        currentPosition.setText(getTimeString(mCurrentPosition));
-
-        //TextView of maximum/total duration of music.
-        TextView remain_Time = (TextView)findViewById(R.id.remain_time);
-        remain_Time.setText(getMiliSecToTime((int)totalDuration));
-
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser){
-                    mMediaPlayer.seekTo(progress*1000);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-    }
 
     private StringBuffer getMiliSecToTime(int millis){
         StringBuffer buffer = new StringBuffer();
@@ -367,15 +349,98 @@ public class MainActivity extends AppCompatActivity {
         stop();
     }
     /*
-    When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
+        When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
      */
-    @Override
-    protected void onPause() {
-        super.onPause();
-        stop();
+        @Override
+        protected void onPause() {
+            super.onPause();
+            stop();
+        }
+
+        @SuppressLint("ClickableViewAccessibility")
+        @Override
+        public void onConfigurationChanged(Configuration newConfig) {
+            super.onConfigurationChanged(newConfig);
+
+            // Checks the orientation of the screen
+            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+
+                videoView_layout.setOnTouchListener(new View.OnTouchListener(){
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event)
+                    {
+                        //button pressed
+                        if (event.getAction() == MotionEvent.ACTION_DOWN){
+                            /*
+                            TimerTask task  = new TimerTask(){
+                              public void run(){
+                                  seekBar_layout.setVisibility(View.VISIBLE);
+                                  mediaController_layout.setVisibility(View.VISIBLE);
+                              }
+                            };*/
+                            controllerVisibility_handler();
+                        }
+                        //button release
+                        else if (event.getAction() == MotionEvent.ACTION_UP){
+
+                        }
+
+                        // TODO Auto-generated method stub
+                        return false;
+                    }
+                });
+                if(!mMediaPlaying){
+                    setControllerVisible();
+                }
+                else
+                    setControllerInvisible();
+            } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+                Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+                setControllerVisible();
+            }
     }
 
 
+    private void controllerVisibility_handler(){
+        setControllerVisible();
+
+        new CountDownTimer(3000, 1000){
+
+            @Override
+            public void onTick(long l) {
+                setControllerVisible();
+            }
+
+            @Override
+            public void onFinish() {
+                setControllerInvisible();
+            }
+        }.start();
+        /*
+        delayHandler = new Handler();
+        delayHandler.postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                setControllerInvisible();
+            }
+        }, 500);
+
+        */
+    }
+    private void setControllerInvisible(){
+        seekBar_layout.setVisibility(View.INVISIBLE);
+        mediaController_layout.setVisibility(View.INVISIBLE);
+    }
+
+    private void setControllerVisible(){
+        seekBar_layout.setVisibility(View.VISIBLE);
+        mediaController_layout.setVisibility(View.VISIBLE);
+    }
+
+
+
+/*
     //Saving data to prevent complete restart which occurs during orientation change
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -402,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        updateSeekBar();
 //        Log.v("MainActivity.java", "mMediaPlaying?1" + mMediaPlaying);
-        /*if (mMediaPlaying) {
+        if (mMediaPlaying) {
             state = start_state;
             try {
                 differentTypeOfFileHandler(mSelectedFile);
@@ -416,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else
             mediaController();
-*/
+
         }
         /*
     private class myView extends SurfaceView implements Runnable{

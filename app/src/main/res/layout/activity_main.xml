@@ -7,13 +7,13 @@
     tools:context="com.example.android.media_template.MainActivity">
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/screen_Layout"
         android:layout_width="match_parent"
         android:layout_height="370dp"
         android:layout_margin="0dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        app:layout_constraintBottom_toTopOf="@+id/mediaController"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,7 +42,7 @@
             <VideoView
                 android:id="@+id/videoScreen"
                 android:layout_width="match_parent"
-                android:layout_height="311dp"
+                android:layout_height="match_parent"
 
                 android:src="@drawable/ic_media_startup_image"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -54,43 +54,51 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/seekBar_Controller"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_height="50dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/mediaController"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.951">
+
         <SeekBar
             android:id="@+id/position_seek_bar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="30dp"
             app:layout_constraintVertical_weight="2" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp">
+
             <TextView
                 android:id="@+id/current_position"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
-                android:text="0:00"/>
+                android:text="0:00" />
 
             <TextView
                 android:id="@+id/remain_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0:00"
-                android:layout_alignParentRight="true" />
+                android:layout_alignParentRight="true"
+                android:text="0:00" />
         </RelativeLayout>
     </LinearLayout>
 
-
     <LinearLayout
-        android:id="@+id/linearLayout3"
+        android:id="@+id/mediaController"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:layout_marginBottom="8dp"
@@ -99,6 +107,7 @@
         android:layout_marginTop="0dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
