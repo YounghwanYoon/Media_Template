@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -36,7 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout mediaController_layout;
     private LinearLayout videoView_layout;
 
-    private Handler delayHandler;
+    private static CountDownTimer countDown;
+    static int  currentOrientation;
 
     private ImageButton mCheck_list_button;
     private ImageButton mPlayerOrPause_button;
@@ -87,7 +89,17 @@ public class MainActivity extends AppCompatActivity {
         seekBar_layout = findViewById(R.id.seekBar_Controller);
         videoView_layout = findViewById(R.id.screen_Layout);
 
-        delayHandler = new Handler();
+        countDown =  new CountDownTimer(3000, 1000){
+            @Override
+            public void onTick(long l) {
+                setControllerVisible();
+            }
+
+            @Override
+            public void onFinish() {
+                setControllerInvisible();
+            }
+        };
 
         mVideoScreen = (VideoView) findViewById(R.id.videoScreen);
         mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
@@ -104,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         mediaController();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void mediaController(){
 
         if(mMediaPlaying ){
@@ -146,7 +159,12 @@ public class MainActivity extends AppCompatActivity {
                                         });
                                         Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
                                         mMediaPlaying = true;
+
+//getRequestedOrientation()
                                         mediaPlayer.start();
+                                        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                            setControllerInvisible();
+                                        }
                                     }
                                 });
                             } catch (NullPointerException ex) {
@@ -159,11 +177,14 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case pause_state:
                             mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
-                            Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
                             if (mMediaPlayer != null) {
                                 mMediaPlayer.pause();
                             }
                             mMediaPlaying = false;
+                            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
+                                setControllerVisible();
+                            }
                             state++;
                             break;
                         case resume_state:
@@ -172,6 +193,9 @@ public class MainActivity extends AppCompatActivity {
                             if (mMediaPlayer != null) {
                                 mMediaPlayer.start();
                                 mMediaPlaying = true;
+                                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                    setControllerInvisible();
+                                }
                             }
                             state--;
                             break;
@@ -186,6 +210,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+        videoView_layout.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event)
+            {
+                //button pressed
+                if (event.getAction() == MotionEvent.ACTION_DOWN && currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
+                    controllerVisibility_handler(Configuration.ORIENTATION_LANDSCAPE);
+                }
+                //button release
+                else if (event.getAction() == MotionEvent.ACTION_UP){
+
+                }
+                return false;
+            }
+        });
     }
 
     //This method updates current source file.
@@ -351,82 +390,37 @@ public class MainActivity extends AppCompatActivity {
     /*
         When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
      */
-        @Override
-        protected void onPause() {
-            super.onPause();
-            stop();
-        }
-
-        @SuppressLint("ClickableViewAccessibility")
-        @Override
-        public void onConfigurationChanged(Configuration newConfig) {
-            super.onConfigurationChanged(newConfig);
-
-            // Checks the orientation of the screen
-            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-
-                videoView_layout.setOnTouchListener(new View.OnTouchListener(){
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event)
-                    {
-                        //button pressed
-                        if (event.getAction() == MotionEvent.ACTION_DOWN){
-                            /*
-                            TimerTask task  = new TimerTask(){
-                              public void run(){
-                                  seekBar_layout.setVisibility(View.VISIBLE);
-                                  mediaController_layout.setVisibility(View.VISIBLE);
-                              }
-                            };*/
-                            controllerVisibility_handler();
-                        }
-                        //button release
-                        else if (event.getAction() == MotionEvent.ACTION_UP){
-
-                        }
-
-                        // TODO Auto-generated method stub
-                        return false;
-                    }
-                });
-                if(!mMediaPlaying){
-                    setControllerVisible();
-                }
-                else
-                    setControllerInvisible();
-            } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-                Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
-                setControllerVisible();
-            }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stop();
     }
 
 
-    private void controllerVisibility_handler(){
-        setControllerVisible();
+    //media control box visibility related
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        currentOrientation = newConfig.orientation;
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
 
-        new CountDownTimer(3000, 1000){
-
-            @Override
-            public void onTick(long l) {
+            if(!mMediaPlaying)
                 setControllerVisible();
-            }
-
-            @Override
-            public void onFinish() {
+            else
                 setControllerInvisible();
-            }
-        }.start();
-        /*
-        delayHandler = new Handler();
-        delayHandler.postDelayed(new Runnable(){
-            @Override
-            public void run() {
-                setControllerInvisible();
-            }
-        }, 500);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            controllerVisibility_handler(currentOrientation);
+        }
+}
 
-        */
+    private void controllerVisibility_handler(int currentOrientation){
+        setControllerVisible();
+        if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE)
+            countDown.start();
+        else
+            countDown.cancel();
     }
     private void setControllerInvisible(){
         seekBar_layout.setVisibility(View.INVISIBLE);
