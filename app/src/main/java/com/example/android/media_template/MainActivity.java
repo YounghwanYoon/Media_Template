@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -12,7 +11,6 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -29,7 +27,6 @@ import android.widget.VideoView;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -59,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private String mLengthOfFile;
     private String mSelectedFile;
 
-    private static SurfaceView videoView;
+    private static SurfaceView mVideoView;
     private static SurfaceHolder holder;
 
     private int state;
@@ -110,8 +107,8 @@ public class MainActivity extends AppCompatActivity {
         mNext_button = (ImageButton) findViewById(R.id.next_button);
         mPrevious_button=(ImageButton) findViewById(R.id.previous_button);
 
-        videoView = (SurfaceView)findViewById(R.id.videoScreen);
-        holder = videoView.getHolder();
+        mVideoView = (SurfaceView)findViewById(R.id.videoScreen);
+        holder = mVideoView.getHolder();
 
         mediaController();
     }
@@ -251,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else{
                 mMediaPlayer.setDisplay(holder);
+                //mMediaPlayer.addTimedTextSource();
             }
 
             try {
@@ -396,7 +394,6 @@ public class MainActivity extends AppCompatActivity {
         stop();
     }
 
-
     //media control box visibility related
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -405,7 +402,6 @@ public class MainActivity extends AppCompatActivity {
         currentOrientation = newConfig.orientation;
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-
             if(!mMediaPlaying)
                 setControllerVisible();
             else
@@ -426,7 +422,6 @@ public class MainActivity extends AppCompatActivity {
         seekBar_layout.setVisibility(View.INVISIBLE);
         mediaController_layout.setVisibility(View.INVISIBLE);
     }
-
     private void setControllerVisible(){
         seekBar_layout.setVisibility(View.VISIBLE);
         mediaController_layout.setVisibility(View.VISIBLE);
