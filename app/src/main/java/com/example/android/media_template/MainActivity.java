@@ -145,8 +145,13 @@ public class MainActivity extends AppCompatActivity {
     //This method updates current source file.
     private void updateCurrentSource(){
         reset();
+
+        Intent returnSelectedFile_Intent2 = new Intent(MainActivity.this, SubtitleHandler.class);
+        startActivityForResult(returnSelectedFile_Intent2,0);
+/*
         Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
         startActivityForResult(returnSelectedFile_Intent,0);
+        */
     }
 
     //This method will handle a file differently depends on the type of a media file.

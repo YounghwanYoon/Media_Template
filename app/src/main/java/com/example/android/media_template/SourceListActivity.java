@@ -41,8 +41,6 @@ public class SourceListActivity extends ListActivity {
         //If there was previously selected path, it will start from the selected path;
         if(mPreviousSelectedPath !=null){
             rootFile = new File(mPreviousSelectedPath);
-            Log.v("SourceActivity.java", "previously selected file path is: " + mPreviousSelectedPath);
-
             getDir(rootFile);
         }
         //If this is first time of selecting file.
@@ -60,8 +58,6 @@ public class SourceListActivity extends ListActivity {
             String secStore = "/storage/";
             //String secStore = "/root/";
             //TODO: Need to do device control. Depends on the device, rootFile could cause error due to having different folder/path names
-
-            Log.i("SourceListActivity.java", "currentPath: " + secStore);
             //Environment.getExternalStorageDirectory().getPath()
             rootFile = new File(secStore);
 
@@ -69,7 +65,7 @@ public class SourceListActivity extends ListActivity {
         }
     }
 
-    private void getDir(File currentFolder) {
+    protected void getDir(File currentFolder) {
 
         itemsInCurrentPath = new ArrayList<String>();
         currentPath = new ArrayList<String>();
@@ -84,7 +80,6 @@ public class SourceListActivity extends ListActivity {
             if(currentFolder.getPath() != "/storage/") {
                 //A folder that will redirect to previous path;
                 itemsInCurrentPath.add(currentFolder.getParent());
-                Log.v("SourceListActivity", " CurrentFolder is at: " + currentFolder.getPath());
 
                 currentPath.add(rootFile.getParent());
                 currentPath.add(currentFolder.getParent());
@@ -93,7 +88,7 @@ public class SourceListActivity extends ListActivity {
         //Log.v("SourceListActivty.java", "Length of files:" +  files.length);
 
         if(files.length ==0) {
-            Log.v("SourceListActivty.java", "Length of files is empty");
+            Log.v(getCallingActivity() + "", "Length of files is empty");
         } else {
             //Add all of files in the current Path/Folder to list
             for(int i=0; i < files.length;i++) {
