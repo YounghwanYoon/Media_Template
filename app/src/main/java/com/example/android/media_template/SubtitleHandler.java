@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SubtitleHandler extends SourceListActivity {
-    private List<String> itemsInCurrentPath = null;
-    private static String mPreviousSelectedPath;
+    //private List<String> itemsInCurrentPath = null;
+    //private static String mPreviousSelectedPath;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,8 +25,9 @@ public class SubtitleHandler extends SourceListActivity {
 
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l,v,position,id);
         //One of item in the current folder is selected
-        File selected_file = new File(itemsInCurrentPath.get(position));
+        File selected_file = new File(super.itemsInCurrentPath.get(position));
 
         if(selected_file.isDirectory())
         {
@@ -47,7 +48,7 @@ public class SubtitleHandler extends SourceListActivity {
             //Log.v("SourceListActivity.java", "Last saved music fold was:" + mPreviousSelectedPath);
 
             Intent returnIntent = getIntent();//new Intent();
-            returnIntent.putExtra("result",selected_file.getPath() );
+            returnIntent.putExtra("resultSubtitleFile",selected_file.getPath() );
             setResult(Activity.RESULT_OK, returnIntent);
             finish();
         }

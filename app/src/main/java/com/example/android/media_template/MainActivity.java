@@ -5,12 +5,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.AudioManager;
+import android.media.MediaFormat;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -25,10 +29,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
+
+    private String mCurrentTag;
 
     private LinearLayout seekBar_layout;
     private LinearLayout mediaController_layout;
@@ -40,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mCheck_list_button;
     private ImageButton mPlayerOrPause_button;
     private ImageButton mNext_button;
-    private ImageButton mPrevious_button;
+    private ImageButton mAdd_Subtitle_button;
     private ImageButton mAdd_List_button;
     private ImageButton mRotate_Button;
 
@@ -63,14 +74,17 @@ public class MainActivity extends AppCompatActivity {
     private final static int start_state = 0;
     private final static int pause_state = 1;
     private final static int resume_state = 2;
-    private final static int next_file= 3;
-    private final static int back_file=4;
+
+    private static int mFileType = 0;
+    private static int mSubtitle_type = 1;
 
     private boolean mMediaPlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mCurrentTag = MainActivity.class.getName();
 
         //Remove Title Bar
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -105,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         mPlayerOrPause_button = (ImageButton) findViewById(R.id.play_or_pause_button);
         mAdd_List_button = (ImageButton) findViewById(R.id.add_list_button);
         mNext_button = (ImageButton) findViewById(R.id.next_button);
-        mPrevious_button=(ImageButton) findViewById(R.id.previous_button);
+        mAdd_Subtitle_button =(ImageButton) findViewById(R.id.ic_subtitle_image);
 
         mVideoView = (SurfaceView)findViewById(R.id.videoScreen);
         holder = mVideoView.getHolder();
@@ -203,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
             mAdd_List_button.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    updateCurrentSource();
+                    getSourceFile(mFileType);
                 }
             });
         }
@@ -222,20 +236,34 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        mAdd_Subtitle_button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getSourceFile(mSubtitle_type);
+            }
+        });
     }
 
     //This method updates current source file.
-    private void updateCurrentSource(){
-        reset();
-
-        Intent returnSelectedFile_Intent2 = new Intent(MainActivity.this, SubtitleHandler.class);
-        startActivityForResult(returnSelectedFile_Intent2,0);
-/*
-        Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
-        startActivityForResult(returnSelectedFile_Intent,0);
-        */
+    private void getSourceFile(int source_Type){
+        //reset();
+        if(source_Type == mSubtitle_type){
+            Intent returnSelectedSubtitle_Intent = new Intent(MainActivity.this, SubtitleHandler.class);
+            startActivityForResult(returnSelectedSubtitle_Intent,0);
+        }
+        else if (source_Type == mFileType){
+            Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
+            startActivityForResult(returnSelectedFile_Intent,0);
+        }
     }
+    /*
+    public boolean onOptionsItemSelected(MenuItem item){
+        if(item.getItemId()==R.id.){
+            startActivityForResult(new Intent(Settings.ACTION_CAPTIONING_SETTINGS),0);
+        }
 
+    }*/
     //This method will handle a file differently depends on the type of a media file.
     private void differentTypeOfFileHandler(String selected) throws InvocationTargetException{
 
@@ -245,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
             //mMediaPlayer.reset();
             Uri myUri = Uri.parse("file://" + mSelectedFile);
             if(mMediaPlayer !=null){
-                    mMediaPlayer.reset();
+                   // mMediaPlayer.reset();
             }
             mMediaPlayer = new MediaPlayer();
             if(selected.endsWith("mp3")){
@@ -255,7 +283,6 @@ public class MainActivity extends AppCompatActivity {
                 mMediaPlayer.setDisplay(holder);
                 //mMediaPlayer.addTimedTextSource();
             }
-
             try {
                 mMediaPlayer.setDataSource(getApplicationContext(), myUri);
             } catch (IOException e) {
@@ -264,7 +291,39 @@ public class MainActivity extends AppCompatActivity {
             mMediaPlayer.prepareAsync();
         }
         else
-            updateCurrentSource();
+            getSourceFile(mFileType);
+    }
+
+    private void subtitleHandler(String selected){
+
+         if (selected.endsWith("srt") ||selected.endsWith("smi")){
+             try {//"file://"+
+                 mMediaPlayer.addTimedTextSource(selected, MediaFormat.createSubtitleFormat()"application/x-subrip");
+             } catch (IOException e) {
+                 e.printStackTrace();
+             }catch (NullPointerException e){
+                 e.getStackTrace();
+                 e.printStackTrace();
+             }
+            // mVideoScreen.addSubtitleSource(getSubtitleSource(selected), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
+        }
+    }
+    private InputStream getSubtitleSource(String filepath) {
+        InputStream ins = null;
+        String ccFileName = filepath.substring(0,filepath.lastIndexOf('.'));
+        File file = new File(ccFileName);
+        if (file.exists() == false)
+        {
+            return null;
+        }
+        FileInputStream fins = null;
+        try {
+            fins = new FileInputStream(file);
+        }catch (Exception e) {
+            Log.e(mCurrentTag,"exception " + e);
+        }
+        ins = (InputStream) fins;
+        return ins;
     }
 
     //This method will update /track a Seek Bar of Media Player.
@@ -355,13 +414,21 @@ public class MainActivity extends AppCompatActivity {
                     .append(String.format("%02d",mSeconds));
     }
 
+    //called whenever intent is returned
     //Result from selecting a file from External SD Driver
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode==0){
             if(resultCode == Activity.RESULT_OK){
-                state = start_state;
-                mSelectedFile = data.getStringExtra("result");
+                Log.i(mCurrentTag, " mMediaPlayer is " +mMediaPlayer);
+
+                if(data.getStringExtra("resultSubtitleFile") != null){
+                    subtitleHandler(data.getStringExtra("resultSubtitleFile"));
+                }
+                if(data.getStringExtra("resultMediaFile") != null){
+                    state = start_state;
+                    mSelectedFile = data.getStringExtra("resultMediaFile");
+                }
             }
         }
     }

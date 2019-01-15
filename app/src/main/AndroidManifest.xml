@@ -27,5 +27,8 @@
         <activity android:name=".SourceListActivity"
             android:configChanges="orientation|screenSize">
         </activity>
+        <activity android:name=".SubtitleHandler"
+            android:configChanges="orientation|screenSize">
+        </activity>
     </application>
 </manifest>

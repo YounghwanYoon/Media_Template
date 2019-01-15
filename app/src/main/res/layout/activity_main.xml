@@ -125,8 +125,8 @@
 
         <ImageButton
             style="@style/PlayButtonStyle"
-            android:id="@+id/previous_button"
-            android:background="@drawable/ic_play_previous_image"
+            android:id="@+id/ic_subtitle_image"
+            android:background="@drawable/ic_subtitle_image"
             android:contentDescription="TODO" />
 
         <ImageButton

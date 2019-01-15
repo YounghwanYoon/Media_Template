@@ -20,10 +20,10 @@ import java.util.List;
 
 public class SourceListActivity extends ListActivity {
 
-    private List<String> itemsInCurrentPath = null;
-    private List<String> currentPath = null;
-    private String root;
-    private static String mPreviousSelectedPath;
+    protected List<String> itemsInCurrentPath = null;
+    protected List<String> currentPath = null;
+    protected String root;
+    protected static String mPreviousSelectedPath;
     private TextView myPath;
     private File rootFile;
     private File[] files;
@@ -138,7 +138,7 @@ public class SourceListActivity extends ListActivity {
             //Log.v("SourceListActivity.java", "Last saved music fold was:" + mPreviousSelectedPath);
 
             Intent returnIntent = getIntent();//new Intent();
-            returnIntent.putExtra("result",selected_file.getPath() );
+            returnIntent.putExtra("resultMediaFile",selected_file.getPath() );
             setResult(Activity.RESULT_OK, returnIntent);
             finish();
         }
