@@ -298,10 +298,8 @@ public class MainActivity extends AppCompatActivity {
 
          if (selected.endsWith("srt") ||selected.endsWith("smi")){
              try {//"file://"+
-                 mMediaPlayer.addTimedTextSource(selected, MediaFormat.createSubtitleFormat()"application/x-subrip");
-             } catch (IOException e) {
-                 e.printStackTrace();
-             }catch (NullPointerException e){
+                 mVideoScreen.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
+             } catch (NullPointerException e){
                  e.getStackTrace();
                  e.printStackTrace();
              }
@@ -437,14 +435,14 @@ public class MainActivity extends AppCompatActivity {
         mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
         if (mMediaPlayer != null) {
             mMediaPlayer.pause();
-            mMediaPlayer.reset();
+            //mMediaPlayer.reset();
         }
     }
     private void stop(){
         if(mMediaPlayer!=null){
             mMediaPlayer.pause();
-            mMediaPlayer.release();
-            mMediaPlayer=null;
+            //mMediaPlayer.release();
+            //mMediaPlayer=null;
             mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
             state = start_state;
         }

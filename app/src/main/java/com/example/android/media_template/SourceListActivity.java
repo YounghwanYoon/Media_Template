@@ -5,6 +5,7 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
@@ -20,13 +21,15 @@ import java.util.List;
 
 public class SourceListActivity extends ListActivity {
 
-    protected List<String> itemsInCurrentPath = null;
-    protected List<String> currentPath = null;
-    protected String root;
+    protected static List<String> itemsInCurrentPath = null;
+    protected static List<String> currentPath = null;
+    protected static String root;
     protected static String mPreviousSelectedPath;
-    private TextView myPath;
-    private File rootFile;
-    private File[] files;
+    private static TextView myPath;
+    private static File rootFile;
+    private static File[] files;
+
+    private static String mCurrentTag;
 
     //this will store a path of folder that contains music(s) that most recently played.
     private static String lastSavePath;
@@ -34,7 +37,7 @@ public class SourceListActivity extends ListActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mCurrentTag = "SourceListActivity.java";
         //Remove Title Bar
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         //Remove Notification Bar
@@ -71,6 +74,13 @@ public class SourceListActivity extends ListActivity {
             //Environment.getExternalStorageDirectory().getPath()
             rootFile = new File(secStore);
 
+            File testingRootFile = Environment.getRootDirectory().getParentFile();
+            //Log.i(mCurrentTag, " currentRootFile is : " +testingRootFile.toString());
+            Log.i(mCurrentTag, " getExternalStorageDirectory() is : " +Environment.getExternalStorageDirectory().toString());
+            Log.i(mCurrentTag, " Environment.getRootDirectory().getParentFile() is : " +Environment.getRootDirectory().getParentFile().toString());
+            Log.i(mCurrentTag, " getExternalFilesDir(null)is : " +getExternalFilesDir(null).toString());
+
+            rootFile = testingRootFile;
             getDir(rootFile);
         }
     }
