@@ -68,11 +68,11 @@ public class SourceListActivity extends ListActivity {
 
             //"/storage/" works with note2 not with s5
             //String secStore = "/storage/";
-            String secStore = "/storage/";
+            //String secStore = "/storage/";
             //String secStore = "/root/";
             //TODO: Need to do device control. Depends on the device, rootFile could cause error due to having different folder/path names
             //Environment.getExternalStorageDirectory().getPath()
-            rootFile = new File(secStore);
+           // rootFile = new File(secStore);
 
             File testingRootFile = Environment.getRootDirectory().getParentFile();
             //Log.i(mCurrentTag, " currentRootFile is : " +testingRootFile.toString());
