@@ -20,6 +20,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
@@ -472,6 +473,9 @@ public class MainActivity extends AppCompatActivity {
         currentOrientation = newConfig.orientation;
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            ViewGroup.LayoutParams params = mediaController_layout.getLayoutParams();
+            params.height = params.MATCH_PARENT;
+            videoView_layout.setLayoutParams(params);
             if(!mMediaPlaying)
                 setControllerVisible();
             else
