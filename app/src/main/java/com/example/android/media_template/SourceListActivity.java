@@ -1,12 +1,15 @@
 package com.example.android.media_template;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -45,6 +48,7 @@ public class SourceListActivity extends ListActivity {
 
         //Set content view to avoid crash
         setContentView(R.layout.listview);
+        verifyStoragePermissions(this);
         start();
     }
 
@@ -79,11 +83,40 @@ public class SourceListActivity extends ListActivity {
             Log.i(mCurrentTag, " getExternalStorageDirectory() is : " +Environment.getExternalStorageDirectory().toString());
             Log.i(mCurrentTag, " Environment.getRootDirectory().getParentFile() is : " +Environment.getRootDirectory().getParentFile().toString());
             Log.i(mCurrentTag, " getExternalFilesDir(null)is : " +getExternalFilesDir(null).toString());
-
-            rootFile = testingRootFile;
+//testingRootFile;
+            rootFile = testingRootFile ; //new File("/storage/emulated/0/Movies");
             getDir(rootFile);
         }
     }
+
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+    /**
+     * Checks if the app has permission to write to device storage
+     *
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
 
     protected void getDir(File currentFolder) {
 
@@ -142,7 +175,7 @@ public class SourceListActivity extends ListActivity {
 
         }
         //Once selected file is mp3 file, then it return to parent activity.
-        else if(selected_file.getPath().endsWith(".mp3") || selected_file.getPath().endsWith(".mp4")){
+        else if(selected_file.getPath().endsWith(".mp3") || selected_file.getPath().endsWith(".mp4")|| selected_file.getPath().endsWith(".mkv")){
             //Calling previouslySelectedPath() to store most recently visited file
             //previouslySelectedPath(selected_file);
             //Log.v("SourceListActivity.java", "Last saved music fold was:" + mPreviousSelectedPath);
