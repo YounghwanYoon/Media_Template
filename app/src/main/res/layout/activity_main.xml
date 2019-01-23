@@ -5,12 +5,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_weight="10"
     tools:context="com.example.android.media_template.MainActivity">
 
     <LinearLayout
         android:id="@+id/screen_Layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_margin="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
@@ -18,6 +19,7 @@
         android:layout_marginBottom="8dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
+        app:layout_constraintVertical_weight="7"
         app:layout_constraintBottom_toTopOf="@+id/seekBar_Controller"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,7 +44,7 @@
             </LinearLayout>
 
             <VideoView
-                android:id="@+id/videoScreen"
+                android:id="@+id/videoView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_media_startup_image"
@@ -52,6 +54,17 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/linearLayout"
                 app:layout_constraintVertical_bias="0.0" />
+
+            <TextView
+                android:id="@+id/txtDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/videoView"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="@+id/videoView"
+                app:layout_constraintTop_toTopOf="@+id/videoView"
+                app:layout_constraintVertical_bias="0.629" />
 
         </android.support.constraint.ConstraintLayout>
 
@@ -122,13 +135,13 @@
 
         <ImageButton
             style="@style/PlayButtonStyle"
-            android:id="@+id/check_list_button"
+            android:id="@+id/ic_subtitle_image"
             android:background="@drawable/ic_play_check_list_image"
             android:contentDescription="TODO" />
 
         <ImageButton
             style="@style/PlayButtonStyle"
-            android:id="@+id/ic_subtitle_image"
+            android:id="@+id/ic_previous_image"
             android:background="@drawable/ic_subtitle_image"
             android:contentDescription="TODO" />
 

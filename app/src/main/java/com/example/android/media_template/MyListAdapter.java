@@ -22,10 +22,10 @@ public class MyListAdapter extends ArrayAdapter {
     private TextView file_directory;
     private int itemType;
 
-    private final static int FILE_TYPE_MP3=0;
-    private final static int FILE_TYPE_MP4=1;
-    private final static int FILE_TYPE_FOLDER = 2;
-    private final static int FILE_TYPE_ELSE=3;
+    private final static int FILE_TYPE_FOLDER = 0;
+    private final static int FILE_TYPE_MUSIC =1;
+    private final static int FILE_TYPE_VIDEO =2;
+    private final static int FILE_TYPE_SUBTITLES =3;
 
     public MyListAdapter(@NonNull Context context, int resource, @NonNull List objects, File currentFolder) {
         super(context, 0, objects);
@@ -69,45 +69,45 @@ public class MyListAdapter extends ArrayAdapter {
     private void setImageByType(){
         //Set different image by file type
         switch(itemType){
-            case FILE_TYPE_MP3:
+            case FILE_TYPE_MUSIC:
                 file_image.setImageResource(R.drawable.ic_music);
                 break;
-            case FILE_TYPE_MP4:
+            case FILE_TYPE_VIDEO:
                 file_image.setImageResource(R.drawable.ic_video);
                 break;
             case FILE_TYPE_FOLDER:
                 file_image.setImageResource(R.drawable.ic_folder);
                 break;
-            case FILE_TYPE_ELSE:
+            case FILE_TYPE_SUBTITLES:
                 file_image.setImageResource(R.drawable.ic_file);
                 break;
             default:
                 file_image.setImageResource(R.drawable.ic_file);
                 break;
-        }
+       }
     }
 
     private int findItemType(String directory){
         File tempFile = new File(directory);
-        int  file_type=FILE_TYPE_ELSE;
+        int  file_type= FILE_TYPE_SUBTITLES;
         Log.v("MyListAdapter", "directory:"+ directory);
         if(tempFile.isFile())
         {
             if(directory.contains(".mp3")) {
-                file_type= FILE_TYPE_MP3;
+                file_type= FILE_TYPE_MUSIC;
             }
-            else if (directory.contains(".mp4")){
-                file_type= FILE_TYPE_MP4;
+            else if (directory.contains(".mp4") || directory.contains(".mkv") || directory.contains(".avi") ){
+                file_type= FILE_TYPE_VIDEO;
             }
-            else
-                file_type=FILE_TYPE_ELSE;
+            else if(directory.contains(".smi") || directory.contains(".srt") )
+                file_type= FILE_TYPE_SUBTITLES;
         }
         else if(new File(directory).isDirectory()){
             file_type= FILE_TYPE_FOLDER;
         }
-        else
-            file_type=FILE_TYPE_ELSE;
-
+        /*else if( directory.contains(".smi") || directory.contains(".srt") )
+            file_type= FILE_TYPE_SUBTITLES;
+*/
         return file_type;
     }
 }

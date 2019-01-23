@@ -11,10 +11,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -32,7 +30,6 @@ import android.widget.VideoView;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     static int  currentOrientation;
 
     private ImageButton mCheck_list_button;
-    private ImageButton mPlayerOrPause_button;
+    private ImageButton mPlayOrPauseButton;
     private ImageButton mNext_button;
     private ImageButton mAdd_Subtitle_button;
     private ImageButton mAdd_List_button;
@@ -59,17 +56,19 @@ public class MainActivity extends AppCompatActivity {
     private static MediaPlayer mMediaPlayer;
     private Handler mHandler = new Handler();
 
-    private VideoView mVideoScreen;
+    private VideoView mVideoView;
     private SeekBar mSeekBar;
     private TextView elapseTime;
     private TextView remainTime;
     private long totalDuration;
-    private int mCurrentPosition;
+    private static int mCurrentPosition;
     private String mLengthOfFile;
     private String mSelectedFile;
 
-    private static SurfaceView mVideoView;
+    private static SurfaceView mSurfaceView;
     private static SurfaceHolder holder;
+    private static ViewGroup.LayoutParams params;
+    private static int backupHeight;
 
     private int state;
     private final static int start_state = 0;
@@ -86,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mCurrentTag = MainActivity.class.getName();
-
         //Remove Title Bar
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         //Remove Notification Bar
@@ -113,17 +111,20 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        mVideoScreen = (VideoView) findViewById(R.id.videoScreen);
+        mVideoView = (VideoView) findViewById(R.id.videoView);
         mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
 
         //Assign references of  ImageButton View in the layout
-        mPlayerOrPause_button = (ImageButton) findViewById(R.id.play_or_pause_button);
+        mPlayOrPauseButton = (ImageButton) findViewById(R.id.play_or_pause_button);
         mAdd_List_button = (ImageButton) findViewById(R.id.add_list_button);
         mNext_button = (ImageButton) findViewById(R.id.next_button);
         mAdd_Subtitle_button =(ImageButton) findViewById(R.id.ic_subtitle_image);
 
-        mVideoView = (SurfaceView)findViewById(R.id.videoScreen);
-        holder = mVideoView.getHolder();
+        mSurfaceView = (SurfaceView)findViewById(R.id.videoView);
+        holder = mSurfaceView.getHolder();
+
+        params = mediaController_layout.getLayoutParams();
+        backupHeight = params.height;
 
         mediaController();
     }
@@ -137,13 +138,13 @@ public class MainActivity extends AppCompatActivity {
             } catch (InvocationTargetException ex) {
                 ex.getStackTrace();
             }
-            mMediaPlayer.seekTo(mCurrentPosition);
+            //mMediaPlayer.seekTo(mCurrentPosition);
             mMediaPlayer.start();
 
             state++;
         }
         else {
-            mPlayerOrPause_button.setOnClickListener(new OnClickListener() {
+            mPlayOrPauseButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     switch (state) {
@@ -165,13 +166,13 @@ public class MainActivity extends AppCompatActivity {
                                                 if (mMediaPlayer != null) {
                                                     //mCurrentPosition = mMediaPlayer.getCurrentPosition();
                                                     updateSeekBar();
+                                                    //mVideoView.addSubtitleSource(getResources().openRawResource(R.raw.district_13), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
                                                 }
                                                 mHandler.postDelayed(this, 0);
                                             }
                                         });
                                         Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
                                         mMediaPlaying = true;
-
 //getRequestedOrientation()
                                         mediaPlayer.start();
                                         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
@@ -188,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
                             state++;
                             break;
                         case pause_state:
-                            mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
+                            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
                             if (mMediaPlayer != null) {
                                 mMediaPlayer.pause();
                             }
@@ -200,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
                             state++;
                             break;
                         case resume_state:
-                            mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
+                            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
                             Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
                             if (mMediaPlayer != null) {
                                 mMediaPlayer.start();
@@ -252,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
         if(source_Type == mSubtitle_type){
             Intent returnSelectedSubtitle_Intent = new Intent(MainActivity.this, SubtitleHandler.class);
             startActivityForResult(returnSelectedSubtitle_Intent,0);
+
         }
         else if (source_Type == mFileType){
             Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
@@ -268,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
     //This method will handle a file differently depends on the type of a media file.
     private void differentTypeOfFileHandler(String selected) throws InvocationTargetException{
 
-        mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_pause_button_image);
+        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
 
         if(mSelectedFile !=null){
             //mMediaPlayer.reset();
@@ -286,6 +288,7 @@ public class MainActivity extends AppCompatActivity {
             }
             try {
                 mMediaPlayer.setDataSource(getApplicationContext(), myUri);
+                mVideoView.requestFocus();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -299,12 +302,12 @@ public class MainActivity extends AppCompatActivity {
 
          if (selected.endsWith("srt") ||selected.endsWith("smi")){
              try {//"file://"+
-                 mVideoScreen.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
+                 mVideoView.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
              } catch (NullPointerException e){
                  e.getStackTrace();
                  e.printStackTrace();
              }
-            // mVideoScreen.addSubtitleSource(getSubtitleSource(selected), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
+            // mVideoView.addSubtitleSource(getSubtitleSource(selected), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
         }
     }
     private InputStream getSubtitleSource(String filepath) {
@@ -429,11 +432,14 @@ public class MainActivity extends AppCompatActivity {
                     mSelectedFile = data.getStringExtra("resultMediaFile");
                 }
             }
+            else{
+                //mMediaPlayer.seekTo(mCurrentPosition);
+            }
         }
     }
     //Call reset() whenever Media Player Object will be reused
     private void reset() {
-        mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
+        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
         if (mMediaPlayer != null) {
             mMediaPlayer.pause();
             //mMediaPlayer.reset();
@@ -444,10 +450,16 @@ public class MainActivity extends AppCompatActivity {
             mMediaPlayer.pause();
             //mMediaPlayer.release();
             //mMediaPlayer=null;
-            mPlayerOrPause_button.setBackgroundResource(R.drawable.ic_play_button_image);
+            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
             state = start_state;
         }
     }
+    private void resume(){
+        if(mMediaPlayer!=null){
+            mMediaPlayer.seekTo(mCurrentPosition);
+        }
+    }
+
     /*
     When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
      */
@@ -457,12 +469,19 @@ public class MainActivity extends AppCompatActivity {
         stop();
     }
     /*
-        When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
+        When an activity goes onPause status, release and nullify MediaPlayer object to restore memory of the device.
      */
     @Override
     protected void onPause() {
         super.onPause();
+        if(mMediaPlayer != null)
+            mMediaPlayer.pause();
         stop();
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();;
+        Log.v(mCurrentTag,"I am On RESUME!");
     }
 
     //media control box visibility related
@@ -470,17 +489,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+
         currentOrientation = newConfig.orientation;
+        ViewGroup.LayoutParams params = mediaController_layout.getLayoutParams();
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            ViewGroup.LayoutParams params = mediaController_layout.getLayoutParams();
-            params.height = params.MATCH_PARENT;
-            videoView_layout.setLayoutParams(params);
+            //params.height = params.MATCH_PARENT;
+          //  videoView_layout.setLayoutParams(params);
             if(!mMediaPlaying)
                 setControllerVisible();
             else
                 setControllerInvisible();
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            //params.height  = backupHeight;
+            //videoView_layout.setLayoutParams(params);
             controllerVisibility_handler(currentOrientation);
         }
 }
