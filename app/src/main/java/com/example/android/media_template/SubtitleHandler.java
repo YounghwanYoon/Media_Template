@@ -56,7 +56,7 @@ public class SubtitleHandler extends SourceListActivity {
             Toast.makeText(SubtitleHandler.this,"It is not a directory", Toast.LENGTH_SHORT);
     }
 
-    //This method save most recent path that user looked.
+    //This method save most recent path that user looked..
     private void previouslySelectedPath(File previousPath){
         if(previousPath.getPath().endsWith(".smi")||previousPath.getPath().endsWith(".srt"))
             mPreviousSelectedPath = previousPath.getParent();

@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
 
     //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
-        
+        //TODO: Need to update mCurrentPosition
        //if(mMediaPlayer != null ){}
         mCurrentPosition = mMediaPlayer.getCurrentPosition();
         //mCurrentPositionBackUp = mVideoView.getCurrentPosition();
