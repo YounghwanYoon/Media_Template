@@ -331,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
         ins = (InputStream) fins;
         return ins;
     }
-
+//Git Is not working
     //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
         //TODO: Need to update mCurrentPosition
