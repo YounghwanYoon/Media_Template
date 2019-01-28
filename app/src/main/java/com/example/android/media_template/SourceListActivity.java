@@ -91,19 +91,19 @@ public class SourceListActivity extends ListActivity {
             File samsungFile;// = new File(samsungExSDPath + "/external_sd/");;
 
             //Log.i(mCurrentTag, " currentRootFile is : " +testingRootFile.toString());
-            Log.i(mCurrentTag, " getExternalStorageDirectory() is : " +Environment.getExternalStorageDirectory().toString());
-            Log.i(mCurrentTag, " Environment.getRootDirectory().getParentFile() is : " +Environment.getRootDirectory().getParentFile().toString());
-            Log.i(mCurrentTag, " getExternalFilesDir(null)is : " +getExternalFilesDir(null).toString());
+           // Log.i(mCurrentTag, " getExternalStorageDirectory() is : " +Environment.getExternalStorageDirectory().toString());
+         //   Log.i(mCurrentTag, " Environment.getRootDirectory().getParentFile() is : " +Environment.getRootDirectory().getParentFile().toString());
+          //  Log.i(mCurrentTag, " getExternalFilesDir(null)is : " +getExternalFilesDir(null).toString());
 
             if(android.os.Build.DEVICE.contains("Samsung") || android.os.Build.MANUFACTURER.contains("Samsung")||android.os.Build.DEVICE.contains("samsung") || android.os.Build.MANUFACTURER.contains("samsung")){
-                Toast.makeText(this, "MANUFACTURER Name: " + Build.MANUFACTURER, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "MANUFACTURER Name: " + Build.MANUFACTURER, Toast.LENGTH_SHORT).show();
 
                 samsungFile = Environment.getRootDirectory().getParentFile();
                 rootFile = samsungFile;
                 //                rootFile = new File("\"/storage/\"");
             }
             else{
-                Toast.makeText(this, "Non_SamSung_MANUFACTURER Name: " + Build.MANUFACTURER, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Non_SamSung_MANUFACTURER Name: " + Build.MANUFACTURER, Toast.LENGTH_SHORT).show();
                 rootFile = parentFile;
             }
 

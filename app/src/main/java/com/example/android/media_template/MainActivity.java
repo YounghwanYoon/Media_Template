@@ -56,12 +56,14 @@ public class MainActivity extends AppCompatActivity {
     private static MediaPlayer mMediaPlayer;
     private Handler mHandler = new Handler();
 
-    private VideoView mVideoView;
+    private static VideoView mVideoView;
     private SeekBar mSeekBar;
     private TextView elapseTime;
     private TextView remainTime;
     private long totalDuration;
+
     private static int mCurrentPosition;
+    private static int mCurrentPositionBackUp;
     private String mLengthOfFile;
     private String mSelectedFile;
 
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Toast.makeText(MainActivity.this, "Hello I am Called ONCREATE()!", Toast.LENGTH_SHORT).show();
         mCurrentTag = MainActivity.class.getName();
         //Remove Title Bar
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -165,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
                                             public void run() {
                                                 if (mMediaPlayer != null) {
                                                     //mCurrentPosition = mMediaPlayer.getCurrentPosition();
+                                                    //if(mCurrentPositionBackUp == null) TODO: Fix it to restore saved to play.
                                                     updateSeekBar();
                                                     //mVideoView.addSubtitleSource(getResources().openRawResource(R.raw.district_13), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
                                                 }
@@ -330,9 +334,11 @@ public class MainActivity extends AppCompatActivity {
 
     //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
-       //if(!mMediaPlaying){ }
-       mCurrentPosition = mMediaPlayer.getCurrentPosition();
-
+        
+       //if(mMediaPlayer != null ){}
+        mCurrentPosition = mMediaPlayer.getCurrentPosition();
+        //mCurrentPositionBackUp = mVideoView.getCurrentPosition();
+       
         // updating seek bar
         totalDuration = mMediaPlayer.getDuration();
         mSeekBar.setMax((int)totalDuration/1000);
@@ -443,6 +449,7 @@ public class MainActivity extends AppCompatActivity {
         if (mMediaPlayer != null) {
             mMediaPlayer.pause();
             //mMediaPlayer.reset();
+            //mMediaPlayer.reset();
         }
     }
     private void stop(){
@@ -456,10 +463,16 @@ public class MainActivity extends AppCompatActivity {
     }
     private void resume(){
         if(mMediaPlayer!=null){
-            mMediaPlayer.seekTo(mCurrentPosition);
+            mMediaPlayer.seekTo(mCurrentPositionBackUp);
         }
     }
 
+    @Override
+    protected void onStart(){
+        super.onStart();
+        Toast.makeText(MainActivity.this, "Hello I am Called onStart()!", Toast.LENGTH_SHORT).show();
+
+    }
     /*
     When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
      */
@@ -473,15 +486,37 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onPause() {
-        super.onPause();
-        if(mMediaPlayer != null)
+
+
+        if(mMediaPlayer != null){
+            Toast.makeText(MainActivity.this, "Hello I am Called OnPause()!", Toast.LENGTH_SHORT).show();
             mMediaPlayer.pause();
+            mCurrentPositionBackUp = mCurrentPosition;
+            //mCurrentPosition = mMediaPlayer.getCurrentPosition();
+            //            mCurrentPositionBackUp = mVideoView.getCurrentPosition();
+
+        }
+        super.onPause();
+
         stop();
     }
     @Override
     protected void onResume(){
-        super.onResume();;
-        Log.v(mCurrentTag,"I am On RESUME!");
+        super.onResume();
+
+        if(mMediaPlayer !=null){
+            Toast.makeText(MainActivity.this, "Hello I am Called OnResume()!", Toast.LENGTH_SHORT).show();
+            mMediaPlayer.pause();
+            state = start_state;
+            mMediaPlayer.seekTo(mCurrentPositionBackUp);
+            Log.i(mCurrentTag,"I just finished seekTo()");
+
+            //mMediaPlayer.seekTo(mCurrentPosition);
+            Log.i(mCurrentTag, "OnResume  mCurrentPosition:"+ mCurrentPosition);
+            Log.i(mCurrentTag, "OnResume  mCurrentPositionBackUp:"+ mCurrentPositionBackUp);
+            //mMediaPlayer.start();
+        }
+
     }
 
     //media control box visibility related
@@ -525,76 +560,34 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-/*
     //Saving data to prevent complete restart which occurs during orientation change
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+
         outState.putInt("currentState", state);
         outState.putInt("mCurrentPosition", mCurrentPosition);
         outState.putBoolean("isMediaPlaying", mMediaPlaying);
-        outState.putString ("selectedFile", mSelectedFile);
-
+        //outState.putString ("selectedFile", mSelectedFile);
+        //outState.putInt("mCurrentVideoPosition", mCurrentPositionBackUp);
     }
 
     //Restoring data to from a restart which occurs during orientation change
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+
         state = savedInstanceState.getInt("currentState");
-        mCurrentPosition = savedInstanceState.getInt("mCurrentPosition");
+        //mCurrentPosition = savedInstanceState.getInt("mCurrentPosition");
         mMediaPlaying = savedInstanceState.getBoolean("isMediaPlaying");
-        mSelectedFile = savedInstanceState.getString("selectedFile");
-        if(mMediaPlayer != null){
-            mMediaPlayer.release();;
-        }
-        mediaController();
+        //mSelectedFile = savedInstanceState.getString("selectedFile");
+        mCurrentPositionBackUp = savedInstanceState.getInt("mCurrentPosition");
+        Log.i(mCurrentTag, "AfterBackup: "+ mCurrentPositionBackUp);
 
-//        updateSeekBar();
-//        Log.v("MainActivity.java", "mMediaPlaying?1" + mMediaPlaying);
-        if (mMediaPlaying) {
-            state = start_state;
-            try {
-                differentTypeOfFileHandler(mSelectedFile);
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-
-                mMediaPlayer.seekTo(mCurrentPosition);
-                Log.v("MainActivity.java", "mCurrentPosition?2" + mCurrentPosition);
-                mMediaPlayer.start();
-            }
-        }
-        else
-            mediaController();
-
-        }
-        /*
-    private class myView extends SurfaceView implements Runnable{
-
-        public myView(Context context) {
-            super(context);
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder){
-
-        }
-
-        @Override
-        public void run() {
-
-        }
-
-        public void pause(){
-
-        }
-
-        public void stop(){
-
-        }
-
+        //mMediaPlayer.seekTo(mCurrentPosition*1000);
+        //mVideoView.seekTo(mCurrentPositionBackUp);
     }
-    */
+
 }
 
 
