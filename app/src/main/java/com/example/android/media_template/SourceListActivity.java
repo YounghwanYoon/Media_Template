@@ -174,12 +174,8 @@ public class SourceListActivity extends ListActivity {
                 Toast.makeText(SourceListActivity.this,"It cannot be read", Toast.LENGTH_SHORT);
 
         }
-        //Once selected file is mp3 file, then it return to parent activity.
-        else if(selected_file.getPath().endsWith(".mkv") || selected_file.getPath().endsWith(".mp4")|| selected_file.getPath().endsWith(".mkv") || selected_file.getPath().endsWith(".avi")){
-            //Calling previouslySelectedPath() to store most recently visited file
-            //previouslySelectedPath(selected_file);
-            //Log.v("SourceListActivity.java", "Last saved music fold was:" + mPreviousSelectedPath);
-
+        //Once selected file is a media file, then it return to parent activity.
+        else if(selected_file.getPath().endsWith(".mp3") || selected_file.getPath().endsWith(".mp4")|| selected_file.getPath().endsWith(".mkv") || selected_file.getPath().endsWith(".avi")){
             Intent returnIntent = getIntent();//new Intent();
             returnIntent.putExtra("resultMediaFile",selected_file.getPath() );
             setResult(Activity.RESULT_OK, returnIntent);
