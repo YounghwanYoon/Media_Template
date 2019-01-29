@@ -294,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
 
     //This method updates current source file.
     private void getSourceFile(int source_Type){
+
         //reset();
         if(source_Type == mSubtitle_type){
             Intent returnSelectedSubtitle_Intent = new Intent(MainActivity.this, SubtitleHandler.class);
@@ -346,9 +347,10 @@ public class MainActivity extends AppCompatActivity {
 
     //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
-        //TODO: Need to update mCurrentPosition
-       //if(mMediaPlayer != null ){}
-        mCurrentPosition = mMediaPlayer.getCurrentPosition();
+       if(mMediaPlayer == null )
+           mMediaPlayer.pause();
+       else
+         mCurrentPosition = mMediaPlayer.getCurrentPosition();
         //mCurrentPositionBackUp = mVideoView.getCurrentPosition();
        
         // updating seek bar
@@ -449,6 +451,11 @@ public class MainActivity extends AppCompatActivity {
                     state = start_state;
                     mSelectedFile = data.getStringExtra("resultMediaFile");
                     mPreviousSelectedFile = data.getStringExtra("resultMediaFile");
+                    if(mSelectedFile != null && mPreviousSelectedFile != null){
+                        Toast.makeText(this, "mSelectedFile is: " + mSelectedFile, Toast.LENGTH_SHORT).show();
+                        Log.i(Tag, "mSelectedFile is:" + mSelectedFile);
+                        Log.i(Tag, "mPreviousSelectedFile is:" + mPreviousSelectedFile);
+                    }
                 }
             }
             //In case where user did not select a file.
@@ -467,15 +474,6 @@ public class MainActivity extends AppCompatActivity {
             //mMediaPlayer.reset();
         }
     }
-    private void stop(){
-        if(mMediaPlayer!=null){
-            mMediaPlayer.pause();
-            //mMediaPlayer.release();
-            //mMediaPlayer=null;
-            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-            state = start_state;
-        }
-    }
     private void resume(){
         if(mMediaPlayer!=null){
             mMediaPlayer.seekTo(mCurrentPositionBackUp);
@@ -492,21 +490,26 @@ public class MainActivity extends AppCompatActivity {
             mMediaPlayer.stop();
             mMediaPlayer.release();
         }
-        //stop();
     }
     /*
         When an activity goes onPause status, release and nullify MediaPlayer object to restore memory of the device.
      */
     @Override
     protected void onPause() {
-        if(mMediaPlayer != null){
+        if(mMediaPlaying && mMediaPlayer !=null){
             Toast.makeText(MainActivity.this, "Hello I am Called OnPause()!", Toast.LENGTH_SHORT).show();
             mMediaPlayer.pause();
-            mCurrentPositionBackUp = mCurrentPosition;
+            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
+            state = start_state;
+        }
+        else{
+            if(mMediaPlayer != null){
+                Toast.makeText(MainActivity.this, "Hello I am Called OnPause()!", Toast.LENGTH_SHORT).show();
+                mMediaPlayer.pause();
+                mCurrentPositionBackUp = mCurrentPosition;
+            }
         }
         super.onPause();
-
-        stop();
     }
     @Override
     protected void onResume(){
