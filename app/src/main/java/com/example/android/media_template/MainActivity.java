@@ -166,12 +166,19 @@ public class MainActivity extends AppCompatActivity {
                                         MainActivity.this.runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                if (mMediaPlayer != null) {
+                                                if (mMediaPlayer != null && mMediaPlaying) {
                                                     //mCurrentPosition = mMediaPlayer.getCurrentPosition();
                                                     //if(mCurrentPositionBackUp == null) TODO: Fix it to restore saved to play.
-                                                    updateSeekBar();
+                                                    try {
+                                                            updateSeekBar();
+                                                    }catch (IllegalStateException e){
+                                                        e.getStackTrace();
+                                                        Thread.interrupted();
+                                                    }
+
                                                     //mVideoView.addSubtitleSource(getResources().openRawResource(R.raw.district_13), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
                                                 }
+
                                                 mHandler.postDelayed(this, 0);
                                             }
                                         });
@@ -255,8 +262,9 @@ public class MainActivity extends AppCompatActivity {
     }
     //Verify whether currently selected file is same file as previously selected.
     private boolean isSameFile(){
-            if(mSelectedFile == null && mSelectedFile != mPreviousSelectedFile)
+            if(mSelectedFile == null && mSelectedFile != mPreviousSelectedFile) {
                 return false;
+            }
             else
                 return true;
     }
@@ -497,15 +505,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         if(mMediaPlaying && mMediaPlayer !=null){
-            Toast.makeText(MainActivity.this, "Hello I am Called OnPause()!", Toast.LENGTH_SHORT).show();
             mMediaPlayer.pause();
             mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
             state = start_state;
         }
         else{
             if(mMediaPlayer != null){
-                Toast.makeText(MainActivity.this, "Hello I am Called OnPause()!", Toast.LENGTH_SHORT).show();
                 mMediaPlayer.pause();
+                state = pause_state;
                 mCurrentPositionBackUp = mCurrentPosition;
             }
         }
@@ -517,17 +524,9 @@ public class MainActivity extends AppCompatActivity {
 
         if(mMediaPlayer !=null){
             Toast.makeText(MainActivity.this, "Hello I am Called OnResume()!", Toast.LENGTH_SHORT).show();
-            mMediaPlayer.pause();
+            //mMediaPlayer.pause();
             state = start_state;
-            mMediaPlayer.seekTo(mCurrentPositionBackUp);
-            Log.i(Tag,"I just finished seekTo()");
-
-            //mMediaPlayer.seekTo(mCurrentPosition);
-            Log.i(Tag, "OnResume  mCurrentPosition:"+ mCurrentPosition);
-            Log.i(Tag, "OnResume  mCurrentPositionBackUp:"+ mCurrentPositionBackUp);
-            //mMediaPlayer.start();
         }
-
     }
 
     //media control box visibility related
