@@ -81,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
     private final int mFileType = 0;
     private final int mSubtitle_type = 1;
 
+    private static final int MEDIA_FILE_REQUEST = 0;
+    private static final int SUBTITLE_FILE_REQUEST = 1;
+
     private boolean mMediaPlaying;
 
     @Override
@@ -306,22 +309,14 @@ public class MainActivity extends AppCompatActivity {
         //reset();
         if(source_Type == mSubtitle_type){
             Intent returnSelectedSubtitle_Intent = new Intent(MainActivity.this, SubtitleHandler.class);
-            startActivityForResult(returnSelectedSubtitle_Intent,0);
+            startActivityForResult(returnSelectedSubtitle_Intent,SUBTITLE_FILE_REQUEST);
 
         }
         else if (source_Type == mFileType){
             Intent returnSelectedFile_Intent = new Intent(MainActivity.this, SourceListActivity.class);
-            startActivityForResult(returnSelectedFile_Intent,0);
+            startActivityForResult(returnSelectedFile_Intent,MEDIA_FILE_REQUEST);
         }
     }
-    /*
-    public boolean onOptionsItemSelected(MenuItem item){
-        if(item.getItemId()==R.id.){
-            startActivityForResult(new Intent(Settings.ACTION_CAPTIONING_SETTINGS),0);
-        }
-
-    }*/
-
 
     private void subtitleHandler(String selected){
 
@@ -448,19 +443,13 @@ public class MainActivity extends AppCompatActivity {
     //Result from selecting a media file.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode==0){
+        if(requestCode==MEDIA_FILE_REQUEST){
             if(resultCode == Activity.RESULT_OK){
-                Log.i(Tag, " mMediaPlayer is " +mMediaPlayer);
-
-                if(data.getStringExtra("resultSubtitleFile") != null){
-                    subtitleHandler(data.getStringExtra("resultSubtitleFile"));
-                }
                 if(data.getStringExtra("resultMediaFile") != null){
                     state = start_state;
                     mSelectedFile = data.getStringExtra("resultMediaFile");
                     mPreviousSelectedFile = data.getStringExtra("resultMediaFile");
                     if(mSelectedFile != null && mPreviousSelectedFile != null){
-                        Toast.makeText(this, "mSelectedFile is: " + mSelectedFile, Toast.LENGTH_SHORT).show();
                         Log.i(Tag, "mSelectedFile is:" + mSelectedFile);
                         Log.i(Tag, "mPreviousSelectedFile is:" + mPreviousSelectedFile);
                     }
@@ -468,67 +457,77 @@ public class MainActivity extends AppCompatActivity {
             }
             //In case where user did not select a file.
             else{
+                Toast.makeText(this, "mSelectedFile is not selected ", Toast.LENGTH_SHORT).show();
                 if(mPreviousSelectedFile!=null)
                     mSelectedFile = mPreviousSelectedFile;
             }
         }
-    }
-    //Call reset() whenever Media Player Object will be reused
-    private void reset() {
-        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-        if (mMediaPlayer != null) {
-            mMediaPlayer.pause();
-            //mMediaPlayer.reset();
-            //mMediaPlayer.reset();
-        }
-    }
-    private void resume(){
-        if(mMediaPlayer!=null){
-            mMediaPlayer.seekTo(mCurrentPositionBackUp);
+        else if (requestCode == SUBTITLE_FILE_REQUEST){
+            if(resultCode == Activity.RESULT_OK) {
+                //TODO: Handle Subtitle Directory
+                if(data.getStringExtra("resultSubtitleFile") != null){
+                    subtitleHandler(data.getStringExtra("resultSubtitleFile"));
+                }
+            }
+
         }
     }
 
     /*
-    When an activity goes onStop status, release and nullify MediaPlayer object to restore memory of the device.
-     */
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mMediaPlayer !=null){
-            mMediaPlayer.stop();
-            mMediaPlayer.release();
-        }
-    }
-    /*
-        When an activity goes onPause status, release and nullify MediaPlayer object to restore memory of the device.
+        When an activity goes onPause status, backup currentPosition and update mPlayOrPauseButton background image.
      */
     @Override
     protected void onPause() {
-        if(mMediaPlaying && mMediaPlayer !=null){
-            mMediaPlayer.pause();
-            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-            state = start_state;
-        }
-        else{
-            if(mMediaPlayer != null){
+        if(mMediaPlayer != null){
+            Thread.interrupted();
+            if(mMediaPlaying){
                 mMediaPlayer.pause();
-                state = pause_state;
+                mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
+                state = start_state;
+                mCurrentPositionBackUp = mCurrentPosition;
+            }
+            else{
+                mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
+                state = start_state;
                 mCurrentPositionBackUp = mCurrentPosition;
             }
         }
+
         super.onPause();
     }
+    /*
+    When an activity goes onResume status, pause update the state.
+  */
     @Override
     protected void onResume(){
         super.onResume();
-
         if(mMediaPlayer !=null){
             Toast.makeText(MainActivity.this, "Hello I am Called OnResume()!", Toast.LENGTH_SHORT).show();
             //mMediaPlayer.pause();
             state = start_state;
         }
     }
-
+    /*
+    When an activity goes onStop status, pause mMediaPlayer to avoid restarting the file.
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mMediaPlayer !=null){
+            mMediaPlayer.pause();
+        }
+    }
+    /*
+    When an activity goes onDestroy status, release and nullify MediaPlayer object to restore memory of the device.
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
+        }
+    }
     //media control box visibility related
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -576,7 +575,8 @@ public class MainActivity extends AppCompatActivity {
         outState.putInt("mCurrentPosition", mCurrentPosition);
         outState.putBoolean("isMediaPlaying", mMediaPlaying);
         //outState.putString ("selectedFile", mSelectedFile);
-        //outState.putInt("mCurrentVideoPosition", mCurrentPositionBackUp);
+
+        outState.putInt("mCurrentPositionBackUp", mCurrentPositionBackUp);
     }
 
     //Restoring data to from a restart which occurs during orientation change
@@ -588,11 +588,10 @@ public class MainActivity extends AppCompatActivity {
         //mCurrentPosition = savedInstanceState.getInt("mCurrentPosition");
         mMediaPlaying = savedInstanceState.getBoolean("isMediaPlaying");
         //mSelectedFile = savedInstanceState.getString("selectedFile");
-        mCurrentPositionBackUp = savedInstanceState.getInt("mCurrentPosition");
+        if(isSameFile() && mCurrentPosition >0){
+            mCurrentPositionBackUp = savedInstanceState.getInt("mCurrentPositionBackUp");
+        }
         Log.i(Tag, "AfterBackup: "+ mCurrentPositionBackUp);
-
-        //mMediaPlayer.seekTo(mCurrentPosition*1000);
-        //mVideoView.seekTo(mCurrentPositionBackUp);
     }
 
 }
