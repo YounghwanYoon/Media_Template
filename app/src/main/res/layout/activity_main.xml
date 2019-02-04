@@ -103,14 +103,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
-                android:text="0:00" />
+                android:text="0:00"
+                android:textColor ="@color/babyBlue"/>
 
             <TextView
                 android:id="@+id/remain_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:text="0:00" />
+                android:text="0:00"
+                android:textColor = "@color/babyBlue"/>
         </RelativeLayout>
     </LinearLayout>
 
@@ -161,4 +163,18 @@
             android:background="@drawable/play_add_list_image"
             android:contentDescription="TODO" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/subTitle_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/mediaController"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 </android.support.constraint.ConstraintLayout>

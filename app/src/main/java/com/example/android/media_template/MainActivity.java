@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.media.MediaFormat;
 import android.media.MediaPlayer;
+import android.media.TimedText;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -35,7 +36,9 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+import static android.media.MediaPlayer.*;
+
+public class MainActivity extends AppCompatActivity implements OnTimedTextListener {
 
     private String Tag;
 
@@ -57,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler = new Handler();
 
     private static VideoView mVideoView;
+    private TextView mSubTitleView;
     private SeekBar mSeekBar;
     private TextView elapseTime;
     private TextView remainTime;
@@ -85,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int SUBTITLE_FILE_REQUEST = 1;
 
     private boolean mMediaPlaying;
+    private int mediaTrackType;
+    private TrackInfo[] trackInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +126,8 @@ public class MainActivity extends AppCompatActivity {
 
         mVideoView = (VideoView) findViewById(R.id.videoView);
         mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
+
+        mSubTitleView = (TextView) findViewById(R.id.subTitle_textView);
 
         //Assign references of  ImageButton View in the layout
         mPlayOrPauseButton = (ImageButton) findViewById(R.id.play_or_pause_button);
@@ -163,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             try {
-                                mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                                mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
                                     @Override
                                     public void onPrepared(MediaPlayer mediaPlayer) {
                                         MainActivity.this.runOnUiThread(new Runnable() {
@@ -318,18 +326,70 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void subtitleHandler(String selected){
+    private void subtitleHandler(String selected) throws IOException {
 
          if (selected.endsWith("srt") ||selected.endsWith("smi")){
              try {//"file://"+
-                 mVideoView.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
+                 //mVideoView.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
+                 mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
+                 mSubTitleView.setVisibility(View.VISIBLE);
+
              } catch (NullPointerException e){
                  e.getStackTrace();
                  e.printStackTrace();
              }
+
+             int textTrackIndex = findTrackIndexFor(
+                     TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT, mMediaPlayer.getTrackInfo());
+             if (textTrackIndex >= 0) {
+                 mMediaPlayer.selectTrack(textTrackIndex);
+             } else {
+                 Log.w("test", "Cannot find text track!");
+             }
+
+             mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
+                 @Override
+                 public void onTimedText(final MediaPlayer mediaPlayer, final TimedText timedText) {
+                     if (timedText != null) {
+                         Log.d("test", "subtitle: " + timedText.getText());
+                     }
+                 }
+             });
             // mVideoView.addSubtitleSource(getSubtitleSource(selected), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
         }
     }
+
+    private int findTrackIndexFor(int mediaTrackType, TrackInfo[] trackInfo) {
+        this.mediaTrackType = mediaTrackType;
+        this.trackInfo = trackInfo;
+        int index = -1;
+        for (int i = 0; i < trackInfo.length; i++) {
+            if (trackInfo[i].getTrackType() == mediaTrackType) {
+                return i;
+            }
+        }
+        return index;
+    }
+
+
+    @Override
+    public void onTimedText(MediaPlayer mediaPlayer, TimedText timedText) {
+/*        if (text != null) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    int seconds = mp.getCurrentPosition() / 1000;
+
+                    txtDisplay.setText("[" + secondsToDuration(seconds) + "] "
+                            + text.getText());
+                }
+            });
+        }
+
+*/
+    }
+
+
     private InputStream getSubtitleSource(String filepath) {
         InputStream ins = null;
         String ccFileName = filepath.substring(0,filepath.lastIndexOf('.'));
@@ -466,10 +526,17 @@ public class MainActivity extends AppCompatActivity {
             if(resultCode == Activity.RESULT_OK) {
                 //TODO: Handle Subtitle Directory
                 if(data.getStringExtra("resultSubtitleFile") != null){
-                    subtitleHandler(data.getStringExtra("resultSubtitleFile"));
+                    try {
+                        subtitleHandler(data.getStringExtra("resultSubtitleFile"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Toast.makeText(this, "Subtitle is successfully added", Toast.LENGTH_LONG);
                 }
             }
-
+            else
+                Toast.makeText(this, "Subtitle is not added", Toast.LENGTH_LONG);
         }
     }
 

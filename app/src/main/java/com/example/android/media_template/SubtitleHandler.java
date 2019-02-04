@@ -7,26 +7,25 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SubtitleHandler extends SourceListActivity {
     //private List<String> itemsInCurrentPath = null;
     //private static String mPreviousSelectedPath;
-    private static String Tag;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Tag = "SubtitleHandler.java";
+        super.Tag= "SubtitleHandler.java";
+    }
 
+    @Override
+    protected void start() {
+        super.start();
     }
 
     @Override
@@ -34,11 +33,12 @@ public class SubtitleHandler extends SourceListActivity {
         super.getDir(currentFolder);
     }
 
+
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l,v,position,id);
+       // super.onListItemClick(l,v,position,id);
         //One of item in the current folder is selected
-        File selected_file = new File(super.itemsInCurrentPath.get(position));
+        File selected_file = new File(itemsInCurrentPath.get(position));
 
         if(selected_file.isDirectory())
         {
@@ -67,11 +67,18 @@ public class SubtitleHandler extends SourceListActivity {
             Toast.makeText(SubtitleHandler.this,"It is not a directory", Toast.LENGTH_SHORT);
     }
 
-    //This method save most recent path that user looked.
-    private void previouslySelectedPath(File previousPath){
-        if(previousPath.getPath().endsWith(".smi")||previousPath.getPath().endsWith(".srt"))
-            mPreviousSelectedPath = previousPath.getParent();
-        else
-            mPreviousSelectedPath = previousPath.toString();
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
     }
+
 }

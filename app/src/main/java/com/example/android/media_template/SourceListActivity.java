@@ -6,12 +6,10 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -30,26 +28,26 @@ public class SourceListActivity extends ListActivity {
     protected static List<String> currentPath = null;
     protected static String root;
     protected static String mPreviousSelectedPath;
-    private static TextView myPath;
-    private static File rootFile;
-    private static File[] files;
+    protected static TextView myPath;
+    protected static File rootFile;
+    protected static File[] files;
 
     // Storage Permissions
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
+    protected static final int REQUEST_EXTERNAL_STORAGE = 1;
+    protected static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    private static String mCurrentTag;
+    protected static String Tag;
 
     //this will store a path of folder that contains music(s) that most recently played.
-    private static String lastSavePath;
+    protected static String lastSavePath;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mCurrentTag = "SourceListActivity.java";
+        Tag = "SourceListActivity.java";
 
       /*  int permissionCheck = ContextCompat.checkSelfPermission(SourceListActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -66,7 +64,7 @@ public class SourceListActivity extends ListActivity {
         start();
     }
 
-    private void start(){
+    protected  void start(){
         myPath = (TextView) findViewById(R.id.path);
 
         //If there was previously selected path, it will start from the selected path;
@@ -90,10 +88,10 @@ public class SourceListActivity extends ListActivity {
             String samsungExSDPath= Environment.getExternalStorageDirectory().getPath();
             File samsungFile;// = new File(samsungExSDPath + "/external_sd/");;
 
-            //Log.i(mCurrentTag, " currentRootFile is : " +testingRootFile.toString());
-           // Log.i(mCurrentTag, " getExternalStorageDirectory() is : " +Environment.getExternalStorageDirectory().toString());
-         //   Log.i(mCurrentTag, " Environment.getRootDirectory().getParentFile() is : " +Environment.getRootDirectory().getParentFile().toString());
-          //  Log.i(mCurrentTag, " getExternalFilesDir(null)is : " +getExternalFilesDir(null).toString());
+            //Log.i(Tag, " currentRootFile is : " +testingRootFile.toString());
+           // Log.i(Tag, " getExternalStorageDirectory() is : " +Environment.getExternalStorageDirectory().toString());
+         //   Log.i(Tag, " Environment.getRootDirectory().getParentFile() is : " +Environment.getRootDirectory().getParentFile().toString());
+          //  Log.i(Tag, " getExternalFilesDir(null)is : " +getExternalFilesDir(null).toString());
 
             if(android.os.Build.DEVICE.contains("Samsung") || android.os.Build.MANUFACTURER.contains("Samsung")||android.os.Build.DEVICE.contains("samsung") || android.os.Build.MANUFACTURER.contains("samsung")){
                 //Toast.makeText(this, "MANUFACTURER Name: " + Build.MANUFACTURER, Toast.LENGTH_SHORT).show();
@@ -126,7 +124,7 @@ public class SourceListActivity extends ListActivity {
 
         if(!startingFilePath.equals(rootFile)) {
             if(startingFilePath.getPath() != "/storage/") {
-                Log.v(mCurrentTag, "What the hell am i Doing here");
+                Log.v(Tag, "What the hell am i Doing here");
                 //A folder that will redirect to previous path;
                 itemsInCurrentPath.add(startingFilePath.getParent());
 
@@ -186,7 +184,7 @@ public class SourceListActivity extends ListActivity {
     }
 
     //This method save most recent path that user looked.
-    private void previouslySelectedPath(File previousPath){
+    protected void previouslySelectedPath(File previousPath){
         if(previousPath.getPath().endsWith(".mp3"))
             mPreviousSelectedPath = previousPath.getParent();
         else
