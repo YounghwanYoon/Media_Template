@@ -38,7 +38,7 @@ import java.util.Locale;
 
 import static android.media.MediaPlayer.*;
 
-public class MainActivity extends AppCompatActivity implements OnTimedTextListener {
+public class MainActivity extends AppCompatActivity  {
 
     private String Tag;
 
@@ -59,8 +59,10 @@ public class MainActivity extends AppCompatActivity implements OnTimedTextListen
     private static MediaPlayer mMediaPlayer;
     private Handler mHandler = new Handler();
 
-    private static VideoView mVideoView;
     private TextView mSubTitleView;
+    private Handler mSubHandler = new Handler();
+
+    private static VideoView mVideoView;
     private SeekBar mSeekBar;
     private TextView elapseTime;
     private TextView remainTime;
@@ -327,18 +329,17 @@ public class MainActivity extends AppCompatActivity implements OnTimedTextListen
     }
 
     private void subtitleHandler(String selected) throws IOException {
-
          if (selected.endsWith("srt") ||selected.endsWith("smi")){
+             Log.i(Tag, "SubtitleHandler is called!");
              try {//"file://"+
                  //mVideoView.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
-                 mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
                  mSubTitleView.setVisibility(View.VISIBLE);
-
+                 mMediaPlayer.pause();
+                 mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
              } catch (NullPointerException e){
                  e.getStackTrace();
                  e.printStackTrace();
              }
-
              int textTrackIndex = findTrackIndexFor(
                      TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT, mMediaPlayer.getTrackInfo());
              if (textTrackIndex >= 0) {
@@ -351,7 +352,12 @@ public class MainActivity extends AppCompatActivity implements OnTimedTextListen
                  @Override
                  public void onTimedText(final MediaPlayer mediaPlayer, final TimedText timedText) {
                      if (timedText != null) {
-                         Log.d("test", "subtitle: " + timedText.getText());
+                         mSubHandler.post( new Runnable(){
+                             @Override
+                             public void run() {
+                                 mSubTitleView.setText("["+ getMiliSecToTime(mediaPlayer.getCurrentPosition() )+ "]"+timedText.getText());
+                             }
+                         });
                      }
                  }
              });
@@ -370,25 +376,22 @@ public class MainActivity extends AppCompatActivity implements OnTimedTextListen
         }
         return index;
     }
-
-
+/*
     @Override
-    public void onTimedText(MediaPlayer mediaPlayer, TimedText timedText) {
-/*        if (text != null) {
-            handler.post(new Runnable() {
+    public void onTimedText(MediaPlayer mediaPlayer, final TimedText timedText) {
+        if (timedText!= null) {
+            mSubHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    int seconds = mp.getCurrentPosition() / 1000;
+                    int seconds = mMediaPlayer.getCurrentPosition();
 
-                    txtDisplay.setText("[" + secondsToDuration(seconds) + "] "
-                            + text.getText());
+                    mSubTitleView.setText("[" + getTimeString(seconds) + "] "
+                            + timedText.getText());
                 }
             });
         }
-
-*/
     }
-
+*/
 
     private InputStream getSubtitleSource(String filepath) {
         InputStream ins = null;
@@ -581,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements OnTimedTextListen
     protected void onStop() {
         super.onStop();
         if (mMediaPlayer !=null){
-            mMediaPlayer.pause();
+        //      mMediaPlayer.pause(); it caused error of illegalStateException
         }
     }
     /*
