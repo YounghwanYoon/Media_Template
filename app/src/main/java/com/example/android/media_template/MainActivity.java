@@ -38,7 +38,7 @@ import java.util.Locale;
 
 import static android.media.MediaPlayer.*;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity  /*implements OnTimedTextListener */{
 
     private String Tag;
 
@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity  {
     private static int mCurrentPositionBackUp;
     private String mLengthOfFile;
     private String mSelectedFile;
+    private String mSelectedSub;
     private static String mPreviousSelectedFile;
 
     private SurfaceView mSurfaceView;
@@ -154,7 +155,6 @@ public class MainActivity extends AppCompatActivity  {
             } catch (InvocationTargetException ex) {
                 ex.getStackTrace();
             }
-            //mMediaPlayer.seekTo(mCurrentPosition);
             mMediaPlayer.start();
 
             state++;
@@ -180,16 +180,18 @@ public class MainActivity extends AppCompatActivity  {
                                             @Override
                                             public void run() {
                                                 if (mMediaPlayer != null && mMediaPlaying) {
-                                                    //mCurrentPosition = mMediaPlayer.getCurrentPosition();
-                                                    //if(mCurrentPositionBackUp == null) TODO: Fix it to restore saved to play.
+
                                                     try {
-                                                            updateSeekBar();
+                                                        if(mSelectedSub != null){
+                                                            subtitleHandler(mSelectedSub);
+                                                        }
+                                                        updateSeekBar();
                                                     }catch (IllegalStateException e){
                                                         e.getStackTrace();
                                                         Thread.interrupted();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
                                                     }
-
-                                                    //mVideoView.addSubtitleSource(getResources().openRawResource(R.raw.district_13), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
                                                 }
 
                                                 mHandler.postDelayed(this, 0);
@@ -200,12 +202,16 @@ public class MainActivity extends AppCompatActivity  {
                                         if(isSameFile()){
                                             mMediaPlayer.seekTo(mCurrentPositionBackUp);
                                         }
-                                        if(mMediaPlayer != null )
+                                        if(mMediaPlayer != null ) {
                                             state++;
-                                        mediaPlayer.start();
-                                        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                                            setControllerInvisible();
+                                            mSubTitleView.setVisibility(View.VISIBLE);
+
+                                            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                                setControllerInvisible();
+                                            }
+                                            mediaPlayer.start();
                                         }
+
                                     }
                                 });
                             } catch (NullPointerException ex) {
@@ -218,6 +224,7 @@ public class MainActivity extends AppCompatActivity  {
                         case pause_state:
                             mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
                             if (mMediaPlayer != null) {
+                                mSubTitleView.setVisibility(View.INVISIBLE);
                                 mMediaPlayer.pause();
                             }
                             mMediaPlaying = false;
@@ -231,6 +238,7 @@ public class MainActivity extends AppCompatActivity  {
                             mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
                             Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
                             if (mMediaPlayer != null) {
+                                mSubTitleView.setVisibility(View.VISIBLE);
                                 mMediaPlayer.start();
                                 mMediaPlaying = true;
                                 if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
@@ -242,7 +250,6 @@ public class MainActivity extends AppCompatActivity  {
                     }
                 }
             });
-
             mAdd_List_button.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -273,6 +280,7 @@ public class MainActivity extends AppCompatActivity  {
             }
         });
     }
+
     //Verify whether currently selected file is same file as previously selected.
     private boolean isSameFile(){
             if(mSelectedFile == null && mSelectedFile != mPreviousSelectedFile) {
@@ -328,6 +336,7 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
 
+    // https://stackoverflow.com/questions/13422673/looking-for-a-working-example-of-addtimedtextsource-for-adding-subtitle-to-a-vid
     private void subtitleHandler(String selected) throws IOException {
          if (selected.endsWith("srt") ||selected.endsWith("smi")){
              Log.i(Tag, "SubtitleHandler is called!");
@@ -340,27 +349,32 @@ public class MainActivity extends AppCompatActivity  {
                  e.getStackTrace();
                  e.printStackTrace();
              }
-             int textTrackIndex = findTrackIndexFor(
-                     TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT, mMediaPlayer.getTrackInfo());
-             if (textTrackIndex >= 0) {
-                 mMediaPlayer.selectTrack(textTrackIndex);
-             } else {
-                 Log.w("test", "Cannot find text track!");
+             try{
+                 int textTrackIndex = findTrackIndexFor(TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT, mMediaPlayer.getTrackInfo());
+                 if (textTrackIndex >= 0) {
+                     mMediaPlayer.selectTrack(textTrackIndex);
+                 } else {
+                     Log.w("test", "Cannot find text track!");
+                 }
+             }catch(RuntimeException e){
+                e.getStackTrace();
              }
 
-             mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
+
+             /*mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
                  @Override
                  public void onTimedText(final MediaPlayer mediaPlayer, final TimedText timedText) {
                      if (timedText != null) {
                          mSubHandler.post( new Runnable(){
                              @Override
                              public void run() {
+                                 Log.i(Tag,"Testing" + 0);
                                  mSubTitleView.setText("["+ getMiliSecToTime(mediaPlayer.getCurrentPosition() )+ "]"+timedText.getText());
                              }
                          });
                      }
                  }
-             });
+             });*/
             // mVideoView.addSubtitleSource(getSubtitleSource(selected), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
         }
     }
@@ -450,6 +464,12 @@ public class MainActivity extends AppCompatActivity  {
 
             }
         });
+        mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
+            @Override
+            public void onTimedText(final MediaPlayer mediaPlayer, final TimedText timedText) {
+                    mSubTitleView.setText(timedText.getText());
+            }
+        });
     }
 
     private StringBuffer getMiliSecToTime(int millis){
@@ -529,13 +549,7 @@ public class MainActivity extends AppCompatActivity  {
             if(resultCode == Activity.RESULT_OK) {
                 //TODO: Handle Subtitle Directory
                 if(data.getStringExtra("resultSubtitleFile") != null){
-                    try {
-                        subtitleHandler(data.getStringExtra("resultSubtitleFile"));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    Toast.makeText(this, "Subtitle is successfully added", Toast.LENGTH_LONG);
+                    mSelectedSub = data.getStringExtra("resultSubtitleFile");
                 }
             }
             else
