@@ -29,11 +29,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteOrder;
+import java.util.List;
 import java.util.Locale;
 
 import static android.media.MediaPlayer.*;
@@ -224,7 +230,8 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
                         case pause_state:
                             mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
                             if (mMediaPlayer != null) {
-                                mSubTitleView.setVisibility(View.INVISIBLE);
+                                if(mSelectedSub != null)
+                                    mSubTitleView.setVisibility(View.INVISIBLE);
                                 mMediaPlayer.pause();
                             }
                             mMediaPlaying = false;
@@ -338,7 +345,8 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
 
     // https://stackoverflow.com/questions/13422673/looking-for-a-working-example-of-addtimedtextsource-for-adding-subtitle-to-a-vid
     private void subtitleHandler(String selected) throws IOException {
-         if (selected.endsWith("srt") ||selected.endsWith("smi")){
+        int i = 1;
+        if (selected.endsWith("srt") ||selected.endsWith("smi")){
              Log.i(Tag, "SubtitleHandler is called!");
              try {//"file://"+
                  //mVideoView.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
@@ -359,7 +367,10 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
              }catch(RuntimeException e){
                 e.getStackTrace();
              }
+             timedTextReader reader = new timedTextReader();
 
+             Toast.makeText(this, "" + reader.readSource(selected).get(i), Toast.LENGTH_SHORT).show();
+             //Log.i(Tag, "Testing Reading Source" + reader.readSource(mSelectedSub));
 
              /*mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
                  @Override
@@ -549,6 +560,7 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
             if(resultCode == Activity.RESULT_OK) {
                 //TODO: Handle Subtitle Directory
                 if(data.getStringExtra("resultSubtitleFile") != null){
+                    mMediaPlayer.release();
                     mSelectedSub = data.getStringExtra("resultSubtitleFile");
                 }
             }
@@ -680,4 +692,60 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
 
 }
 
+class timedTextReader {
+
+    protected timedTextReader(){
+
+    }
+
+    public static List<String> readSource(String filePath){
+        /*BOMInputStream bomIn = new BOMInputStream(new FileInputStream(filePath), ByteOrderMark.UTF_16LE);
+
+        if (bomIn.hasBOM()){
+
+        }*/
+
+        File subtitleFile = new File(filePath);
+        FileReader fileReader = null;
+        BufferedReader bufferReader = null;
+        List<String> listOfLines=null;
+        String singleLine = null;
+        try {
+            fileReader = new FileReader(subtitleFile);
+            bufferReader = new BufferedReader(fileReader);
+            while((singleLine =bufferReader.readLine()) !=null){
+                listOfLines.add(singleLine);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }/*finally {
+            try {
+                if (fileReader != null) {
+                    fileReader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (bufferReader != null) {
+                    bufferReader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
+
+            if (listOfLines != null) {
+                return listOfLines;
+            } else
+                return listOfLines;
+    }
+
+
+    public static String updateSubTitleSection(){
+        return "Hello";
+    }
+
+}
 
