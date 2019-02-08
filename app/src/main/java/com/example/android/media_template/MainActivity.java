@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.AudioManager;
-import android.media.MediaFormat;
 import android.media.MediaPlayer;
 import android.media.TimedText;
 import android.net.Uri;
@@ -27,21 +26,9 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import static android.media.MediaPlayer.*;
 
@@ -77,8 +64,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     private String mSelectedSub;
     private static String mPreviousSelectedFile;
 
-    private static SurfaceView mSurfaceView;
-    private SurfaceHolder holder;
+    private SurfaceHolder mSurfaceHolder;
     private ViewGroup.LayoutParams params;
 
     private int state;
@@ -126,9 +112,10 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
             }
         };
 
-        mSurfaceView = findViewById(R.id.videoView);
-        holder = mSurfaceView.getHolder();
-        holder.addCallback(this);
+        SurfaceView mSurfaceView = findViewById(R.id.videoView);
+        mSurfaceHolder = mSurfaceView.getHolder();
+        mSurfaceHolder.addCallback(this);
+        mSurfaceView.setKeepScreenOn(true); // keepScreen On While playing
 
         mSeekBar = findViewById(R.id.position_seek_bar);
         mSubTitleView = findViewById(R.id.subTitle_textView);
@@ -196,7 +183,6 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                                         }
                                         mediaPlayer.start();
                                     }
-
                                 }
                             });
                         } catch (NullPointerException ex) {
@@ -291,7 +277,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             }
             else{
-                mMediaPlayer.setDisplay(holder);
+                mMediaPlayer.setDisplay(mSurfaceHolder);
                 //mMediaPlayer.addTimedTextSource();
             }
             try {
@@ -366,12 +352,9 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
     //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
-       if(mMediaPlayer == null )
-           mMediaPlayer.pause();
-       else
+
          mCurrentPosition = mMediaPlayer.getCurrentPosition();
-        //mCurrentPositionBackUp = mVideoView.getCurrentPosition();
-       
+
         // updating seek bar
         long totalDuration = mMediaPlayer.getDuration();
         mSeekBar.setMax((int) totalDuration /1000);
@@ -437,6 +420,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                     .append(String.format("%02d",mSeconds));
     }
 
+    @SuppressLint("DefaultLocale")
     private StringBuffer getTimeString(int millis) {
         StringBuffer buffer = new StringBuffer();
 
@@ -620,12 +604,10 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         Log.w(Tag, "Surface is created!");
-        onResume();
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
-
         Log.w(Tag, "Surface is changed!");
     }
 
