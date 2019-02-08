@@ -39,12 +39,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import static android.media.MediaPlayer.*;
 
-public class MainActivity extends AppCompatActivity  /*implements OnTimedTextListener */{
+public class MainActivity extends AppCompatActivity  implements OnTimedTextListener, SurfaceHolder.Callback {
 
     private String Tag;
 
@@ -66,25 +67,19 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
     private Handler mHandler = new Handler();
 
     private TextView mSubTitleView;
-    private Handler mSubHandler = new Handler();
 
-    private static VideoView mVideoView;
+    //private static VideoView mVideoView;
     private SeekBar mSeekBar;
-    private TextView elapseTime;
-    private TextView remainTime;
-    private long totalDuration;
 
     private static int mCurrentPosition;
     private static int mCurrentPositionBackUp;
-    private String mLengthOfFile;
     private String mSelectedFile;
     private String mSelectedSub;
     private static String mPreviousSelectedFile;
 
-    private SurfaceView mSurfaceView;
+    private static SurfaceView mSurfaceView;
     private SurfaceHolder holder;
     private ViewGroup.LayoutParams params;
-    private static int backupHeight;
 
     private int state;
     private final int start_state = 0;
@@ -98,8 +93,6 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
     private static final int SUBTITLE_FILE_REQUEST = 1;
 
     private boolean mMediaPlaying;
-    private int mediaTrackType;
-    private TrackInfo[] trackInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,137 +126,123 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
             }
         };
 
-        mVideoView = (VideoView) findViewById(R.id.videoView);
-        mSeekBar = (SeekBar)findViewById(R.id.position_seek_bar);
+        mSurfaceView = findViewById(R.id.videoView);
+        holder = mSurfaceView.getHolder();
+        holder.addCallback(this);
 
-        mSubTitleView = (TextView) findViewById(R.id.subTitle_textView);
+        mSeekBar = findViewById(R.id.position_seek_bar);
+        mSubTitleView = findViewById(R.id.subTitle_textView);
 
         //Assign references of  ImageButton View in the layout
-        mPlayOrPauseButton = (ImageButton) findViewById(R.id.play_or_pause_button);
-        mAdd_List_button = (ImageButton) findViewById(R.id.add_list_button);
-        mNext_button = (ImageButton) findViewById(R.id.next_button);
-        mAdd_Subtitle_button =(ImageButton) findViewById(R.id.ic_subtitle_image);
-
-        mSurfaceView = (SurfaceView)findViewById(R.id.videoView);
-        holder = mSurfaceView.getHolder();
+        mPlayOrPauseButton = findViewById(R.id.play_or_pause_button);
+        mAdd_List_button = findViewById(R.id.add_list_button);
+        mNext_button =  findViewById(R.id.next_button);
+        mAdd_Subtitle_button = findViewById(R.id.ic_subtitle_image);
 
         params = mediaController_layout.getLayoutParams();
-        backupHeight = params.height;
+        int backupHeight = params.height;
 
         assignMediaControl();
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private void assignMediaControl(){
-        if(mMediaPlaying ){
-            try {
-                differentTypeOfFileHandler(mSelectedFile);
-            } catch (InvocationTargetException ex) {
-                ex.getStackTrace();
-            }
-            mMediaPlayer.start();
+        mPlayOrPauseButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switch (state) {
+                    case start_state:
+                        //if (!mMediaPlaying) {                        }
+                        try {
+                            differentTypeOfFileHandler(mSelectedFile);
+                        } catch (InvocationTargetException ex) {
+                            ex.getStackTrace();
+                        }
 
-            state++;
-        }
-        else {
-            mPlayOrPauseButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    switch (state) {
-                        case start_state:
-                            //if (!mMediaPlaying) {                        }
-                            try {
-                                differentTypeOfFileHandler(mSelectedFile);
-                            } catch (InvocationTargetException ex) {
-                                ex.getStackTrace();
-                            }
-
-                            try {
-                                mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
-                                    @Override
-                                    public void onPrepared(MediaPlayer mediaPlayer) {
-                                        MainActivity.this.runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (mMediaPlayer != null && mMediaPlaying) {
-
-                                                    try {
-                                                        if(mSelectedSub != null){
-                                                            subtitleHandler(mSelectedSub);
-                                                        }
-                                                        updateSeekBar();
-                                                    }catch (IllegalStateException e){
-                                                        e.getStackTrace();
-                                                        Thread.interrupted();
-                                                    } catch (IOException e) {
-                                                        e.printStackTrace();
+                        try {
+                            mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
+                                @Override
+                                public void onPrepared(MediaPlayer mediaPlayer) {
+                                    MainActivity.this.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (mMediaPlayer != null && mMediaPlaying) {
+                                                try {
+                                                    if(mSelectedSub != null){
+                                                        Log.i(Tag, "subtitleHandler is called");
+                                                        subtitleHandler(mSelectedSub);
                                                     }
+                                                    updateSeekBar();
+                                                }catch (IllegalStateException e){
+                                                    e.getStackTrace();
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
                                                 }
-
-                                                mHandler.postDelayed(this, 0);
                                             }
-                                        });
-                                        Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
-                                        mMediaPlaying = true;
-                                        if(isSameFile()){
-                                            mMediaPlayer.seekTo(mCurrentPositionBackUp);
+                                            mHandler.postDelayed(this, 500);
                                         }
-                                        if(mMediaPlayer != null ) {
-                                            state++;
-                                            mSubTitleView.setVisibility(View.VISIBLE);
-
-                                            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                                                setControllerInvisible();
-                                            }
-                                            mediaPlayer.start();
-                                        }
-
+                                    });
+                                    Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
+                                    mMediaPlaying = true;
+                                    if(isSameFile()){
+                                        mMediaPlayer.seekTo(mCurrentPositionBackUp);
                                     }
-                                });
-                            } catch (NullPointerException ex) {
-                                ex.getStackTrace();
-                                mMediaPlaying = false;
-                            }
+                                    if(mMediaPlayer != null ) {
+                                        state++;
+                                        mSubTitleView.setVisibility(View.VISIBLE);
 
-                            //mMediaPlayer.start();
-                            break;
-                        case pause_state:
-                            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-                            if (mMediaPlayer != null) {
-                                if(mSelectedSub != null)
-                                    mSubTitleView.setVisibility(View.INVISIBLE);
-                                mMediaPlayer.pause();
-                            }
-                            mMediaPlaying = false;
-                            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                                Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
-                                setControllerVisible();
-                            }
-                            state++;
-                            break;
-                        case resume_state:
-                            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
-                            Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
-                            if (mMediaPlayer != null) {
-                                mSubTitleView.setVisibility(View.VISIBLE);
-                                mMediaPlayer.start();
-                                mMediaPlaying = true;
-                                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                                    setControllerInvisible();
+                                        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                            setControllerInvisible();
+                                        }
+                                        mediaPlayer.start();
+                                    }
+
                                 }
+                            });
+                        } catch (NullPointerException ex) {
+                            ex.getStackTrace();
+                            mMediaPlaying = false;
+                        }
+
+                        //mMediaPlayer.start();
+                        break;
+                    case pause_state:
+                        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
+                        if (mMediaPlayer != null) {
+                            if(mSelectedSub != null)
+                                mSubTitleView.setVisibility(View.INVISIBLE);
+                            mMediaPlayer.pause();
+                        }
+                        mMediaPlaying = false;
+                        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                            Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
+                            setControllerVisible();
+                        }
+                        state++;
+                        break;
+                    case resume_state:
+                        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
+                        Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
+                        if (mMediaPlayer != null) {
+                            mSubTitleView.setVisibility(View.VISIBLE);
+                            mMediaPlayer.start();
+                            mMediaPlaying = true;
+                            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                setControllerInvisible();
                             }
-                            state--;
-                            break;
-                    }
+                        }
+                        state--;
+                        break;
                 }
-            });
-            mAdd_List_button.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    getSourceFile(mFileType);
-                }
-            });
-        }
+            }
+        });
+        mAdd_List_button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getSourceFile(mFileType);
+            }
+        });
+
         videoView_layout.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent event)
@@ -273,9 +252,8 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
                     controllerVisibility_handler(Configuration.ORIENTATION_LANDSCAPE);
                 }
                 //button release
-                else if (event.getAction() == MotionEvent.ACTION_UP){
-
-                }
+               //if (event.getAction() == MotionEvent.ACTION_UP){
+                //Do nothing when touching a screen is released
                 return false;
             }
         });
@@ -318,7 +296,7 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
             }
             try {
                 mMediaPlayer.setDataSource(getApplicationContext(), myUri);
-                mVideoView.requestFocus();
+                //mVideoView.requestFocus();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -345,13 +323,11 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
 
     // https://stackoverflow.com/questions/13422673/looking-for-a-working-example-of-addtimedtextsource-for-adding-subtitle-to-a-vid
     private void subtitleHandler(String selected) throws IOException {
-        int i = 1;
+        Thread.interrupted();
         if (selected.endsWith("srt") ||selected.endsWith("smi")){
              Log.i(Tag, "SubtitleHandler is called!");
-             try {//"file://"+
-                 //mVideoView.addSubtitleSource(getSubtitleSource(selected),MediaFormat.createSubtitleFormat("text/vtt", Locale.ENGLISH.getLanguage()) );
+             try {
                  mSubTitleView.setVisibility(View.VISIBLE);
-                 mMediaPlayer.pause();
                  mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
              } catch (NullPointerException e){
                  e.getStackTrace();
@@ -367,32 +343,13 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
              }catch(RuntimeException e){
                 e.getStackTrace();
              }
-             timedTextReader reader = new timedTextReader();
-
-             Toast.makeText(this, "" + reader.readSource(selected).get(i), Toast.LENGTH_SHORT).show();
-             //Log.i(Tag, "Testing Reading Source" + reader.readSource(mSelectedSub));
-
-             /*mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
-                 @Override
-                 public void onTimedText(final MediaPlayer mediaPlayer, final TimedText timedText) {
-                     if (timedText != null) {
-                         mSubHandler.post( new Runnable(){
-                             @Override
-                             public void run() {
-                                 Log.i(Tag,"Testing" + 0);
-                                 mSubTitleView.setText("["+ getMiliSecToTime(mediaPlayer.getCurrentPosition() )+ "]"+timedText.getText());
-                             }
-                         });
-                     }
-                 }
-             });*/
-            // mVideoView.addSubtitleSource(getSubtitleSource(selected), MediaFormat.createSubtitleFormat("text/vtt",Locale.ENGLISH.getLanguage()));
+            mMediaPlayer.setOnTimedTextListener(this);
         }
     }
 
     private int findTrackIndexFor(int mediaTrackType, TrackInfo[] trackInfo) {
-        this.mediaTrackType = mediaTrackType;
-        this.trackInfo = trackInfo;
+        int mediaTrackType1 = mediaTrackType;
+        TrackInfo[] trackInfo1 = trackInfo;
         int index = -1;
         for (int i = 0; i < trackInfo.length; i++) {
             if (trackInfo[i].getTrackType() == mediaTrackType) {
@@ -401,39 +358,10 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
         }
         return index;
     }
-/*
+
     @Override
     public void onTimedText(MediaPlayer mediaPlayer, final TimedText timedText) {
-        if (timedText!= null) {
-            mSubHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    int seconds = mMediaPlayer.getCurrentPosition();
-
-                    mSubTitleView.setText("[" + getTimeString(seconds) + "] "
-                            + timedText.getText());
-                }
-            });
-        }
-    }
-*/
-
-    private InputStream getSubtitleSource(String filepath) {
-        InputStream ins = null;
-        String ccFileName = filepath.substring(0,filepath.lastIndexOf('.'));
-        File file = new File(ccFileName);
-        if (file.exists() == false)
-        {
-            return null;
-        }
-        FileInputStream fins = null;
-        try {
-            fins = new FileInputStream(file);
-        }catch (Exception e) {
-            Log.e(Tag,"exception " + e);
-        }
-        ins = (InputStream) fins;
-        return ins;
+        mSubTitleView.setText(timedText.getText());
     }
 
     //This method will update /track a Seek Bar of Media Player.
@@ -445,17 +373,17 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
         //mCurrentPositionBackUp = mVideoView.getCurrentPosition();
        
         // updating seek bar
-        totalDuration = mMediaPlayer.getDuration();
-        mSeekBar.setMax((int)totalDuration/1000);
+        long totalDuration = mMediaPlayer.getDuration();
+        mSeekBar.setMax((int) totalDuration /1000);
         mSeekBar.setProgress(mCurrentPosition/1000);
 
         //TextView of current Position of Music.
-        TextView currentPosition = (TextView)findViewById(R.id.current_position);
+        TextView currentPosition = findViewById(R.id.current_position);
         currentPosition.setText(getTimeString(mCurrentPosition));
 
         //TextView of maximum/total duration of music.
-        TextView remain_Time = (TextView)findViewById(R.id.remain_time);
-        remain_Time.setText(getMiliSecToTime((int)totalDuration));
+        TextView remain_Time = findViewById(R.id.remain_time);
+        remain_Time.setText(getMiliSecToTime((int) totalDuration));
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -483,6 +411,7 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
         });
     }
 
+    @SuppressLint("DefaultLocale")
     private StringBuffer getMiliSecToTime(int millis){
         StringBuffer buffer = new StringBuffer();
 
@@ -506,7 +435,7 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
                     .append(String.format("%02d",mMinutes))
                     .append(":")
                     .append(String.format("%02d",mSeconds));
-    };
+    }
 
     private StringBuffer getTimeString(int millis) {
         StringBuffer buffer = new StringBuffer();
@@ -558,10 +487,15 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
         }
         else if (requestCode == SUBTITLE_FILE_REQUEST){
             if(resultCode == Activity.RESULT_OK) {
-                //TODO: Handle Subtitle Directory
                 if(data.getStringExtra("resultSubtitleFile") != null){
                     mMediaPlayer.release();
                     mSelectedSub = data.getStringExtra("resultSubtitleFile");
+                    Toast.makeText(this, "Subtitle is added", Toast.LENGTH_LONG);
+                    try {
+                        subtitleHandler(mSelectedSub);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             else
@@ -575,7 +509,6 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
     @Override
     protected void onPause() {
         if(mMediaPlayer != null){
-            Thread.interrupted();
             if(mMediaPlaying){
                 mMediaPlayer.pause();
                 mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
@@ -588,7 +521,6 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
                 mCurrentPositionBackUp = mCurrentPosition;
             }
         }
-
         super.onPause();
     }
     /*
@@ -597,7 +529,7 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
     @Override
     protected void onResume(){
         super.onResume();
-        if(mMediaPlayer !=null){
+        if(mMediaPlayer !=null && mMediaPlaying){
             Toast.makeText(MainActivity.this, "Hello I am Called OnResume()!", Toast.LENGTH_SHORT).show();
             //mMediaPlayer.pause();
             state = start_state;
@@ -609,9 +541,6 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
     @Override
     protected void onStop() {
         super.onStop();
-        if (mMediaPlayer !=null){
-        //      mMediaPlayer.pause(); it caused error of illegalStateException
-        }
     }
     /*
     When an activity goes onDestroy status, release and nullify MediaPlayer object to restore memory of the device.
@@ -620,32 +549,30 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
     protected void onDestroy() {
         super.onDestroy();
         if (mMediaPlayer != null) {
-            mMediaPlayer.stop();
+            mMediaPlayer.pause();
             mMediaPlayer.release();
+            mMediaPlayer = null;
+            mSelectedSub = null;
         }
     }
     //media control box visibility related
-    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
         currentOrientation = newConfig.orientation;
-        ViewGroup.LayoutParams params = mediaController_layout.getLayoutParams();
+        params = mediaController_layout.getLayoutParams();
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            //params.height = params.MATCH_PARENT;
-          //  videoView_layout.setLayoutParams(params);
             if(!mMediaPlaying)
                 setControllerVisible();
             else
                 setControllerInvisible();
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-            //params.height  = backupHeight;
-            //videoView_layout.setLayoutParams(params);
+
             controllerVisibility_handler(currentOrientation);
         }
-}
+    }
     private void controllerVisibility_handler(int currentOrientation){
         setControllerVisible();
         if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE)
@@ -670,8 +597,7 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
         outState.putInt("currentState", state);
         outState.putInt("mCurrentPosition", mCurrentPosition);
         outState.putBoolean("isMediaPlaying", mMediaPlaying);
-        //outState.putString ("selectedFile", mSelectedFile);
-
+        outState.putString ("mSelectedSub", mSelectedSub);
         outState.putInt("mCurrentPositionBackUp", mCurrentPositionBackUp);
     }
 
@@ -687,65 +613,26 @@ public class MainActivity extends AppCompatActivity  /*implements OnTimedTextLis
         if(isSameFile() && mCurrentPosition >0){
             mCurrentPositionBackUp = savedInstanceState.getInt("mCurrentPositionBackUp");
         }
-        Log.i(Tag, "AfterBackup: "+ mCurrentPositionBackUp);
+        mSelectedSub = savedInstanceState.getString("mSelectedSub");
+
     }
 
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        Log.w(Tag, "Surface is created!");
+        onResume();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
+
+        Log.w(Tag, "Surface is changed!");
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        onPause();
+        Log.i(Tag, "Surface is destroyed!");
+        surfaceHolder.setKeepScreenOn(true);
+    }
 }
-
-class timedTextReader {
-
-    protected timedTextReader(){
-
-    }
-
-    public static List<String> readSource(String filePath){
-        /*BOMInputStream bomIn = new BOMInputStream(new FileInputStream(filePath), ByteOrderMark.UTF_16LE);
-
-        if (bomIn.hasBOM()){
-
-        }*/
-
-        File subtitleFile = new File(filePath);
-        FileReader fileReader = null;
-        BufferedReader bufferReader = null;
-        List<String> listOfLines=null;
-        String singleLine = null;
-        try {
-            fileReader = new FileReader(subtitleFile);
-            bufferReader = new BufferedReader(fileReader);
-            while((singleLine =bufferReader.readLine()) !=null){
-                listOfLines.add(singleLine);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }/*finally {
-            try {
-                if (fileReader != null) {
-                    fileReader.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (bufferReader != null) {
-                    bufferReader.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
-
-            if (listOfLines != null) {
-                return listOfLines;
-            } else
-                return listOfLines;
-    }
-
-
-    public static String updateSubTitleSection(){
-        return "Hello";
-    }
-
-}
-
