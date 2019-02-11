@@ -157,7 +157,11 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                                                 try {
                                                     if(mSelectedSub != null){
                                                         Log.i(Tag, "subtitleHandler is called");
-                                                        subtitleHandler(mSelectedSub);
+                                                        if(isSameFile())
+                                                            subtitleHandler(mSelectedSub);
+                                                            //remove previously selected subtitle when new media player is inserted.
+                                                        else
+                                                            mSelectedSub = null;
                                                     }
                                                     updateSeekBar();
                                                 }catch (IllegalStateException e){
@@ -329,7 +333,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
              }catch(RuntimeException e){
                 e.getStackTrace();
              }
-            mMediaPlayer.setOnTimedTextListener(this);
+            //mMediaPlayer.setOnTimedTextListener(this);
         }
     }
 
@@ -347,7 +351,8 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
     @Override
     public void onTimedText(MediaPlayer mediaPlayer, final TimedText timedText) {
-        mSubTitleView.setText(timedText.getText());
+        if(isSameFile())
+            mSubTitleView.setText(timedText.getText());
     }
 
     //This method will update /track a Seek Bar of Media Player.
@@ -361,18 +366,27 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
         mSeekBar.setProgress(mCurrentPosition/1000);
 
         //TextView of current Position of Music.
-        TextView currentPosition = findViewById(R.id.current_position);
-        currentPosition.setText(getTimeString(mCurrentPosition));
-
+       final TextView currentPosition = findViewById(R.id.current_position);
+        //currentPosition.setText(getTimeString(mCurrentPosition));
         //TextView of maximum/total duration of music.
         TextView remain_Time = findViewById(R.id.remain_time);
         remain_Time.setText(getMiliSecToTime((int) totalDuration));
 
+        mMediaPlayer.setOnTimedTextListener(this);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            //TextView of current Position of Music.
+            //TextView currentPosition = findViewById(R.id.current_position);
+            int tempProgress;
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                //if User initiate changing its seekbar, then it updates accordingly.
                 if(fromUser){
-                    mMediaPlayer.seekTo(progress*1000);
+                    tempProgress = progress*1000;
+                }
+                //else currentPosition of Text View will update programmatically.
+                else{
+                    currentPosition.setText(getTimeString(progress*1000));
                 }
             }
 
@@ -383,13 +397,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        mMediaPlayer.setOnTimedTextListener(new OnTimedTextListener() {
-            @Override
-            public void onTimedText(final MediaPlayer mediaPlayer, final TimedText timedText) {
-                    mSubTitleView.setText(timedText.getText());
+                mMediaPlayer.seekTo(tempProgress);
             }
         });
     }
@@ -609,12 +617,12 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
         Log.w(Tag, "Surface is changed!");
+        surfaceHolder.setKeepScreenOn(true);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         onPause();
         Log.i(Tag, "Surface is destroyed!");
-        surfaceHolder.setKeepScreenOn(true);
     }
 }
