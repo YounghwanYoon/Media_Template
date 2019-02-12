@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     private Handler mHandler = new Handler();
 
     private TextView mSubTitleView;
-
+    private Handler mTimedTextHandler = new Handler();
     //private static VideoView mVideoView;
     private SeekBar mSeekBar;
 
@@ -119,7 +119,9 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
         mSeekBar = findViewById(R.id.position_seek_bar);
         mSubTitleView = findViewById(R.id.subTitle_textView);
+        mSubTitleView.setVisibility(View.INVISIBLE);
 
+        mSelectedSub = "android.resource://" + getPackageName()+ R.raw.blank;
         //Assign references of  ImageButton View in the layout
         mPlayOrPauseButton = findViewById(R.id.play_or_pause_button);
         mAdd_List_button = findViewById(R.id.add_list_button);
@@ -157,50 +159,58 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                                                 try {
                                                     if(mSelectedSub != null){
                                                         Log.i(Tag, "subtitleHandler is called");
-                                                        if(isSameFile())
-                                                            subtitleHandler(mSelectedSub);
+
+                                                        if(isSameFile()) {
+                                                           // subtitleHandler(mSelectedSub);
                                                             //remove previously selected subtitle when new media player is inserted.
+                                                        }
                                                         else
                                                             mSelectedSub = null;
                                                     }
                                                     updateSeekBar();
                                                 }catch (IllegalStateException e){
                                                     e.getStackTrace();
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
                                                 }
                                             }
-                                            mHandler.postDelayed(this, 500);
+                                            mHandler.postDelayed(this, 1000);
                                         }
                                     });
                                     Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
                                     mMediaPlaying = true;
+                                    //if selected file is same as previously selected file, then continue from where it was left off.
                                     if(isSameFile()){
                                         mMediaPlayer.seekTo(mCurrentPositionBackUp);
                                     }
                                     if(mMediaPlayer != null ) {
                                         state++;
-                                        mSubTitleView.setVisibility(View.VISIBLE);
 
                                         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
                                             setControllerInvisible();
                                         }
+                                        try {
+                                            subtitleHandler(mSelectedSub);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
                                         mediaPlayer.start();
                                     }
+                                }
+                            });
+                            mMediaPlayer.setOnCompletionListener(new OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    mCurrentPositionBackUp = 0;
                                 }
                             });
                         } catch (NullPointerException ex) {
                             ex.getStackTrace();
                             mMediaPlaying = false;
                         }
-
-                        //mMediaPlayer.start();
                         break;
                     case pause_state:
                         mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
                         if (mMediaPlayer != null) {
-                            if(mSelectedSub != null)
-                                mSubTitleView.setVisibility(View.INVISIBLE);
+
                             mMediaPlayer.pause();
                         }
                         mMediaPlaying = false;
@@ -214,7 +224,6 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                         mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
                         Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
                         if (mMediaPlayer != null) {
-                            mSubTitleView.setVisibility(View.VISIBLE);
                             mMediaPlayer.start();
                             mMediaPlaying = true;
                             if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
@@ -317,7 +326,6 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
         if (selected.endsWith("srt") ||selected.endsWith("smi")){
              Log.i(Tag, "SubtitleHandler is called!");
              try {
-                 mSubTitleView.setVisibility(View.VISIBLE);
                  mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
              } catch (NullPointerException e){
                  e.getStackTrace();
@@ -333,7 +341,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
              }catch(RuntimeException e){
                 e.getStackTrace();
              }
-            //mMediaPlayer.setOnTimedTextListener(this);
+            mMediaPlayer.setOnTimedTextListener(this);
         }
     }
 
@@ -351,9 +359,24 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
     @Override
     public void onTimedText(MediaPlayer mediaPlayer, final TimedText timedText) {
-        if(isSameFile())
-            mSubTitleView.setText(timedText.getText());
+
+        mTimedTextHandler.post(new Runnable(){
+            @Override
+            public void run() {
+                if(timedText.getText() != "" && timedText.getText() !=null){
+                    mSubTitleView.setVisibility(View.VISIBLE);
+                    mSubTitleView.setText(timedText.getText());
+                    Log.i(Tag, "timedText.getText() is "+ timedText.getText());
+                    Log.i(Tag, "timedText.getBounds() is "+ timedText.getBounds());
+
+                }
+                else
+                    mSubTitleView.setVisibility(View.INVISIBLE);
+            }
+        });
     }
+
+
 
     //This method will update /track a Seek Bar of Media Player.
     private void updateSeekBar() {
@@ -372,7 +395,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
         TextView remain_Time = findViewById(R.id.remain_time);
         remain_Time.setText(getMiliSecToTime((int) totalDuration));
 
-        mMediaPlayer.setOnTimedTextListener(this);
+        //mMediaPlayer.setOnTimedTextListener(this);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             //TextView of current Position of Music.
             //TextView currentPosition = findViewById(R.id.current_position);
