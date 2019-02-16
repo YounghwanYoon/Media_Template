@@ -149,51 +149,23 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                         }
 
                         try {
+                            subtitleHandler(mSelectedSub);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        try {
                             mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
                                 @Override
                                 public void onPrepared(MediaPlayer mediaPlayer) {
-                                    MainActivity.this.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (mMediaPlayer != null && mMediaPlaying) {
-                                                try {
-                                                    if(mSelectedSub != null){
-                                                        Log.i(Tag, "subtitleHandler is called");
-
-                                                        if(isSameFile()) {
-                                                           // subtitleHandler(mSelectedSub);
-                                                            //remove previously selected subtitle when new media player is inserted.
-                                                        }
-                                                        else
-                                                            mSelectedSub = null;
-                                                    }
-                                                    updateSeekBar();
-                                                }catch (IllegalStateException e){
-                                                    e.getStackTrace();
-                                                }
-                                            }
-                                            mHandler.postDelayed(this, 1000);
-                                        }
-                                    });
-                                    Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
                                     mMediaPlaying = true;
-                                    //if selected file is same as previously selected file, then continue from where it was left off.
-                                    if(isSameFile()){
-                                        mMediaPlayer.seekTo(mCurrentPositionBackUp);
-                                    }
-                                    if(mMediaPlayer != null ) {
-                                        state++;
 
-                                        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                                            setControllerInvisible();
-                                        }
-                                        try {
-                                            subtitleHandler(mSelectedSub);
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                        mediaPlayer.start();
-                                    }
+                                    setSeekBar();
+                                    Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
+
+                                    state++;
+                                    mediaPlayer.start();
+                                    //when media player is in the Started State, hide media controller.
+                                    controllerVisibility_handler();
                                 }
                             });
                             mMediaPlayer.setOnCompletionListener(new OnCompletionListener() {
@@ -206,29 +178,32 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                             ex.getStackTrace();
                             mMediaPlaying = false;
                         }
+
                         break;
                     case pause_state:
                         mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
                         if (mMediaPlayer != null) {
-
                             mMediaPlayer.pause();
                         }
+                        Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
+
                         mMediaPlaying = false;
-                        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                            Toast.makeText(MainActivity.this, "Pause!", Toast.LENGTH_SHORT).show();
-                            setControllerVisible();
-                        }
+                        Log.v(Tag, "Is media playing? on pause state" + mMediaPlayer.isPlaying());
+                        //In Pause State, set Controller Visible.
+                        controllerVisibility_handler();
+
                         state++;
                         break;
                     case resume_state:
                         mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
                         Toast.makeText(MainActivity.this, "Resume!", Toast.LENGTH_SHORT).show();
                         if (mMediaPlayer != null) {
-                            mMediaPlayer.start();
                             mMediaPlaying = true;
-                            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                                setControllerInvisible();
-                            }
+
+                            mMediaPlayer.start();
+
+                            //In Resume State, set Controller Invisible while playing.
+                            controllerVisibility_handler();
                         }
                         state--;
                         break;
@@ -247,11 +222,12 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
             public boolean onTouch(View v, MotionEvent event)
             {
                 //button pressed
-                if (event.getAction() == MotionEvent.ACTION_DOWN && currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
-                    controllerVisibility_handler(Configuration.ORIENTATION_LANDSCAPE);
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    controllerVisibility_handler();
                 }
+
                 //button release
-               //if (event.getAction() == MotionEvent.ACTION_UP){
+                //if (event.getAction() == MotionEvent.ACTION_UP){
                 //Do nothing when touching a screen is released
                 return false;
             }
@@ -267,11 +243,11 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
     //Verify whether currently selected file is same file as previously selected.
     private boolean isSameFile(){
-            if(mSelectedFile == null && mSelectedFile != mPreviousSelectedFile) {
-                return false;
-            }
-            else
-                return true;
+        if(mSelectedFile == null || mSelectedFile != mPreviousSelectedFile) {
+            return false;
+        }
+        else
+            return true;
     }
 
     //This method will handle a file differently depends on the type of a media file.
@@ -324,23 +300,23 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     private void subtitleHandler(String selected) throws IOException {
         Thread.interrupted();
         if (selected.endsWith("srt") ||selected.endsWith("smi")){
-             Log.i(Tag, "SubtitleHandler is called!");
-             try {
-                 mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
-             } catch (NullPointerException e){
-                 e.getStackTrace();
-                 e.printStackTrace();
-             }
-             try{
-                 int textTrackIndex = findTrackIndexFor(TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT, mMediaPlayer.getTrackInfo());
-                 if (textTrackIndex >= 0) {
-                     mMediaPlayer.selectTrack(textTrackIndex);
-                 } else {
-                     Log.w("test", "Cannot find text track!");
-                 }
-             }catch(RuntimeException e){
+            Log.i(Tag, "SubtitleHandler is called!");
+            try {
+                mMediaPlayer.addTimedTextSource(selected, MEDIA_MIMETYPE_TEXT_SUBRIP);
+            } catch (NullPointerException e){
                 e.getStackTrace();
-             }
+                e.printStackTrace();
+            }
+            try{
+                int textTrackIndex = findTrackIndexFor(TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT, mMediaPlayer.getTrackInfo());
+                if (textTrackIndex >= 0) {
+                    mMediaPlayer.selectTrack(textTrackIndex);
+                } else {
+                    Log.w("test", "Cannot find text track!");
+                }
+            }catch(RuntimeException e){
+                e.getStackTrace();
+            }
             mMediaPlayer.setOnTimedTextListener(this);
         }
     }
@@ -378,39 +354,29 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
 
 
-    //This method will update /track a Seek Bar of Media Player.
-    private void updateSeekBar() {
+    //Setting up seekBar and its behaviors.
+    private void setSeekBar() {
 
-         mCurrentPosition = mMediaPlayer.getCurrentPosition();
-
-        // updating seek bar
         long totalDuration = mMediaPlayer.getDuration();
         mSeekBar.setMax((int) totalDuration /1000);
         mSeekBar.setProgress(mCurrentPosition/1000);
 
         //TextView of current Position of Music.
-       final TextView currentPosition = findViewById(R.id.current_position);
-        //currentPosition.setText(getTimeString(mCurrentPosition));
-        //TextView of maximum/total duration of music.
-        TextView remain_Time = findViewById(R.id.remain_time);
+        final TextView currentPosition = findViewById(R.id.current_position);
+        //TextView of total duration of media file.
+        TextView remain_Time = findViewById(R.id.total_time);
         remain_Time.setText(getMiliSecToTime((int) totalDuration));
 
-        //mMediaPlayer.setOnTimedTextListener(this);
+        //this will update seekbar as user change the seek bar.
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            //TextView of current Position of Music.
-            //TextView currentPosition = findViewById(R.id.current_position);
             int tempProgress;
-
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 //if User initiate changing its seekbar, then it updates accordingly.
                 if(fromUser){
-                    tempProgress = progress*1000;
+                    mMediaPlayer.seekTo(progress*1000);
                 }
-                //else currentPosition of Text View will update programmatically.
-                else{
-                    currentPosition.setText(getTimeString(progress*1000));
-                }
+                currentPosition.setText(getTimeString(progress*1000));
             }
 
             @Override
@@ -420,7 +386,18 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mMediaPlayer.seekTo(tempProgress);
+                //mMediaPlayer.seekTo(tempProgress);
+            }
+        });
+
+        //runOnUiThread method will run a new thread/Runnable() in the MainActivity Thread
+        MainActivity.this.runOnUiThread(new Runnable() {
+            //It will update current position of media player.
+            @Override
+            public void run() {
+                mCurrentPosition = mMediaPlayer.getCurrentPosition();
+                currentPosition.setText(getTimeString(mCurrentPosition));
+                mHandler.postDelayed(this, 1000);
             }
         });
     }
@@ -443,7 +420,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                     .append(String.format("%02d",mSeconds));
 
         else
-           return buffer
+            return buffer
                     .append(String.format("%02d",mHours))
                     .append(":")
                     .append(String.format("%02d",mMinutes))
@@ -486,7 +463,6 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                 if(data.getStringExtra("resultMediaFile") != null){
                     state = start_state;
                     mSelectedFile = data.getStringExtra("resultMediaFile");
-                    mPreviousSelectedFile = data.getStringExtra("resultMediaFile");
                     if(mSelectedFile != null && mPreviousSelectedFile != null){
                         Log.i(Tag, "mSelectedFile is:" + mSelectedFile);
                         Log.i(Tag, "mPreviousSelectedFile is:" + mPreviousSelectedFile);
@@ -523,19 +499,16 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
      */
     @Override
     protected void onPause() {
-        if(mMediaPlayer != null){
-            if(mMediaPlaying){
-                mMediaPlayer.pause();
-                mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-                state = start_state;
-                mCurrentPositionBackUp = mCurrentPosition;
-            }
-            else{
-                mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-                state = start_state;
-                mCurrentPositionBackUp = mCurrentPosition;
-            }
+
+        if(mMediaPlaying){
+            mMediaPlayer.pause();
         }
+        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
+        state = pause_state;
+        mPreviousSelectedFile = mSelectedFile;
+        mCurrentPositionBackUp = mCurrentPosition;
+        mMediaPlaying = false;
+
         super.onPause();
     }
     /*
@@ -544,11 +517,17 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     @Override
     protected void onResume(){
         super.onResume();
-        if(mMediaPlayer !=null && mMediaPlaying){
-            Toast.makeText(MainActivity.this, "Hello I am Called OnResume()!", Toast.LENGTH_SHORT).show();
-            //mMediaPlayer.pause();
-            state = start_state;
+        if(mMediaPlayer !=null){
+            //if selected file is same as previously selected file, then continue from where it was left off.
+            if(isSameFile()){
+                mMediaPlayer.start();
+                mMediaPlayer.seekTo(mCurrentPositionBackUp);
+            }
+            else if(!isSameFile()){
+                mMediaPlayer.stop();
+            }
         }
+        state = start_state;
     }
     /*
     When an activity goes onStop status, pause mMediaPlayer to avoid restarting the file.
@@ -577,23 +556,35 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
 
         currentOrientation = newConfig.orientation;
         params = mediaController_layout.getLayoutParams();
+
+
+        controllerVisibility_handler();
         // Checks the orientation of the screen
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        /*if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if(!mMediaPlaying)
                 setControllerVisible();
             else
                 setControllerInvisible();
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-
-            controllerVisibility_handler(currentOrientation);
-        }
+            controllerVisibility_handler();
+        }*/
     }
-    private void controllerVisibility_handler(int currentOrientation){
-        setControllerVisible();
-        if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE)
-            countDown.start();
-        else
-            countDown.cancel();
+    private void controllerVisibility_handler(){
+        //when the application is already assigned media file to Media Player Object do as follow.
+        if(mMediaPlayer!=null){
+            if(mMediaPlayer.isPlaying()){
+                setControllerVisible();
+                countDown.start();
+            }
+            else
+                setControllerVisible();
+        }
+        //when the application initiated/started and Media Player is null, set Controller Visible
+        else{
+            setControllerVisible();
+        }
+
+        //countDown.cancel();
     }
     private void setControllerInvisible(){
         seekBar_layout.setVisibility(View.INVISIBLE);
