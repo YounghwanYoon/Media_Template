@@ -29,8 +29,14 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.media.MediaPlayer.*;
 
@@ -144,13 +150,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
             public void onClick(View view) {
                 switch (state) {
                     case start_state:
-                        //if (!mMediaPlaying) {                        }
-                        try {
-                            differentTypeOfFileHandler(mSelectedFile);
-                        } catch (InvocationTargetException ex) {
-                            ex.getStackTrace();
-                        }
-
+                        differentTypeOfFileHandler(mSelectedFile);
                         try {
                             subtitleHandler(mSelectedSub);
                         } catch (IOException e) {
@@ -167,9 +167,6 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                                     Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
 
                                     state++;
-
-
-
                                      mediaPlayer.start();
 
                                     //when media player is in the Started State, hide media controller.
@@ -257,7 +254,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     }
 
     //This method will handle a file differently depends on the type of a media file.
-    private void differentTypeOfFileHandler(String selectedMediaFile) throws InvocationTargetException{
+    private void differentTypeOfFileHandler(String selectedMediaFile) {
 
         if(selectedMediaFile !=null){
             mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
@@ -680,4 +677,62 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
         onPause();
         Log.i(Tag, "Surface is destroyed!");
     }
+}
+
+//backup from local history 2/7/2019-6.17pm
+class timedTextReader {
+
+    protected timedTextReader(){
+
+    }
+
+    public static List<String> readSource(String filePath){
+        /*BOMInputStream bomIn = new BOMInputStream(new FileInputStream(filePath), ByteOrderMark.UTF_16LE);
+
+        if (bomIn.hasBOM()){
+
+        }*/
+
+        File subtitleFile = new File(filePath);
+        FileReader fileReader = null;
+        BufferedReader bufferReader = null;
+        List<String> listOfLines= new ArrayList<String>();
+        String singleLine = null;
+        try {
+            fileReader = new FileReader(subtitleFile);
+            bufferReader = new BufferedReader(fileReader);
+            while((singleLine =bufferReader.readLine()) !=null){
+                listOfLines.add(singleLine);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }/*finally {
+            try {
+                if (fileReader != null) {
+                    fileReader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (bufferReader != null) {
+                    bufferReader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
+
+        if (listOfLines != null) {
+            return listOfLines;
+        } else
+            return listOfLines;
+    }
+
+
+    public static String updateSubTitleSection(){
+        return "Hello";
+    }
+
 }
