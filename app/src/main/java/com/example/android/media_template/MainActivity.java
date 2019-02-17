@@ -8,9 +8,11 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.TimedText;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -79,6 +81,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     private static final int SUBTITLE_FILE_REQUEST = 1;
 
     private boolean mMediaPlaying;
+    private boolean mOkayToPlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,6 +158,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                         }
                         try {
                             mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
+                                @RequiresApi(api = Build.VERSION_CODES.O)
                                 @Override
                                 public void onPrepared(MediaPlayer mediaPlayer) {
                                     mMediaPlaying = true;
@@ -163,7 +167,11 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                                     Toast.makeText(MainActivity.this, "Playing!", Toast.LENGTH_SHORT).show();
 
                                     state++;
-                                    mediaPlayer.start();
+
+
+
+                                     mediaPlayer.start();
+
                                     //when media player is in the Started State, hide media controller.
                                     controllerVisibility_handler();
                                 }
@@ -171,7 +179,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                             mMediaPlayer.setOnCompletionListener(new OnCompletionListener() {
                                 @Override
                                 public void onCompletion(MediaPlayer mediaPlayer) {
-                                    mCurrentPositionBackUp = 0;
+                                    //mCurrentPositionBackUp = 0;
                                 }
                             });
                         } catch (NullPointerException ex) {
@@ -242,40 +250,46 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     }
 
     //Verify whether currently selected file is same file as previously selected.
-    private boolean isSameFile(){
-        if(mSelectedFile == null || mSelectedFile != mPreviousSelectedFile) {
-            return false;
-        }
-        else
-            return true;
+    private boolean isSameFile(String currentFile, String previousFile){
+        Log.i(Tag, "right before start previousFile is " + currentFile);
+        Log.i(Tag, "right before start previousFile is " + previousFile);
+        return currentFile.equals(previousFile) ;
     }
 
     //This method will handle a file differently depends on the type of a media file.
-    private void differentTypeOfFileHandler(String selected) throws InvocationTargetException{
+    private void differentTypeOfFileHandler(String selectedMediaFile) throws InvocationTargetException{
 
-        if(mSelectedFile !=null){
+        if(selectedMediaFile !=null){
             mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_pause_button_image);
-
-            //mMediaPlayer.reset();
             Uri myUri = Uri.parse("file://" + mSelectedFile);
             if(mMediaPlayer !=null){
-                // mMediaPlayer.reset();
+                mMediaPlayer.release();
+                mMediaPlayer = null;
             }
             mMediaPlayer = new MediaPlayer();
-            if(selected.endsWith("mp3")){
-                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            }
-            else{
-                mMediaPlayer.setDisplay(mSurfaceHolder);
-                //mMediaPlayer.addTimedTextSource();
-            }
+            //Initial Volumn
+            mMediaPlayer.setVolume(0.5f,0.5f);
+
             try {
                 mMediaPlayer.setDataSource(getApplicationContext(), myUri);
                 //mVideoView.requestFocus();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            mMediaPlayer.prepareAsync();
+
+            if(selectedMediaFile.endsWith("mp3")){
+                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                try {
+                    mMediaPlayer.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            else{
+                mMediaPlayer.setDisplay(mSurfaceHolder);
+                mMediaPlayer.prepareAsync();
+            }
+            mOkayToPlay = true;
         }
         else
             getSourceFile(mFileType);
@@ -352,14 +366,13 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
         });
     }
 
-
-
     //Setting up seekBar and its behaviors.
     private void setSeekBar() {
 
         long totalDuration = mMediaPlayer.getDuration();
+        //mSeekBar.setMin(0);
         mSeekBar.setMax((int) totalDuration /1000);
-        mSeekBar.setProgress(mCurrentPosition/1000);
+        mSeekBar.setProgress(mMediaPlayer.getCurrentPosition()/1000);
 
         //TextView of current Position of Music.
         final TextView currentPosition = findViewById(R.id.current_position);
@@ -379,6 +392,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                 currentPosition.setText(getTimeString(progress*1000));
             }
 
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
 
@@ -390,14 +404,26 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
             }
         });
 
+
+        if(isSameFile(mSelectedFile, mPreviousSelectedFile)){
+            mMediaPlayer.seekTo(mCurrentPositionBackUp);
+            mSeekBar.setProgress((int) (mCurrentPositionBackUp/1000));
+        }
+        //mOkayToPlay =
         //runOnUiThread method will run a new thread/Runnable() in the MainActivity Thread
         MainActivity.this.runOnUiThread(new Runnable() {
             //It will update current position of media player.
+
             @Override
             public void run() {
-                mCurrentPosition = mMediaPlayer.getCurrentPosition();
-                currentPosition.setText(getTimeString(mCurrentPosition));
-                mHandler.postDelayed(this, 1000);
+                Log.v(Tag, "is it okay to play? "  + mOkayToPlay);
+                if(mOkayToPlay && mMediaPlayer !=null){
+                    mCurrentPosition = mMediaPlayer.getCurrentPosition();
+                    currentPosition.setText(getTimeString(mCurrentPosition));
+                    mHandler.postDelayed(this, 1000);
+                }
+                else
+                    mHandler.removeCallbacks(this);
             }
         });
     }
@@ -500,15 +526,18 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     @Override
     protected void onPause() {
 
-        if(mMediaPlaying){
-            mMediaPlayer.pause();
+        if(mMediaPlayer != null){
+            if(mMediaPlaying){
+                mMediaPlayer.pause();
+                mOkayToPlay = false;
+            }
+            mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
+            state = pause_state;
+            mPreviousSelectedFile = mSelectedFile;
+            mCurrentPositionBackUp = mMediaPlayer.getCurrentPosition();
+            mCurrentPosition = 0;
+            mMediaPlaying = false;
         }
-        mPlayOrPauseButton.setBackgroundResource(R.drawable.ic_play_button_image);
-        state = pause_state;
-        mPreviousSelectedFile = mSelectedFile;
-        mCurrentPositionBackUp = mCurrentPosition;
-        mMediaPlaying = false;
-
         super.onPause();
     }
     /*
@@ -518,14 +547,26 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     protected void onResume(){
         super.onResume();
         if(mMediaPlayer !=null){
+//            mMediaPlayer.stop();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+            /*
             //if selected file is same as previously selected file, then continue from where it was left off.
             if(isSameFile()){
-                mMediaPlayer.start();
+                mMediaPlayer.stop();
+                try {
+                    mMediaPlayer.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 mMediaPlayer.seekTo(mCurrentPositionBackUp);
             }
             else if(!isSameFile()){
                 mMediaPlayer.stop();
-            }
+                mMediaPlayer.release();
+                mMediaPlayer.reset();
+                mMediaPlayer = null;
+            }*/
         }
         state = start_state;
     }
@@ -547,6 +588,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
             mMediaPlayer.release();
             mMediaPlayer = null;
             mSelectedSub = null;
+            mOkayToPlay = false;
         }
     }
     //media control box visibility related
@@ -600,6 +642,7 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        Log.i(Tag, "onSaveIntanceState is called");
         outState.putInt("currentState", state);
         outState.putInt("mCurrentPosition", mCurrentPosition);
         outState.putBoolean("isMediaPlaying", mMediaPlaying);
@@ -612,11 +655,12 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
+        Log.i(Tag, "onRestoreInstanceState is called");
         state = savedInstanceState.getInt("currentState");
         //mCurrentPosition = savedInstanceState.getInt("mCurrentPosition");
         mMediaPlaying = savedInstanceState.getBoolean("isMediaPlaying");
         //mSelectedFile = savedInstanceState.getString("selectedFile");
-        if(isSameFile() && mCurrentPosition >0){
+        if(isSameFile(mSelectedFile, mPreviousSelectedFile) && mCurrentPosition >0){
             mCurrentPositionBackUp = savedInstanceState.getInt("mCurrentPositionBackUp");
         }
         mSelectedSub = savedInstanceState.getString("mSelectedSub");
