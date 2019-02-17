@@ -391,20 +391,17 @@ public class MainActivity extends AppCompatActivity  implements OnTimedTextListe
                 }
                 currentPosition.setText(getTimeString(progress*1000));
             }
-
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
 
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 //mMediaPlayer.seekTo(tempProgress);
             }
         });
 
-
+        //Check whether selected file was same as last file. If so, continue the play.
         if(isSameFile(mSelectedFile, mPreviousSelectedFile)){
             mMediaPlayer.seekTo(mCurrentPositionBackUp);
             mSeekBar.setProgress((int) (mCurrentPositionBackUp/1000));
